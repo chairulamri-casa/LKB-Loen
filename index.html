@@ -405,6 +405,14 @@
         <button class="btn btn-ghost" id="btnWfhWord">📝 Unduh Word WFH (.doc)</button>
       </div>
 
+      <div class="field-divider" style="margin-top:26px;">Import Data Lama (Sekali Pakai)</div>
+      <p class="hint" style="margin-top:8px;">Punya berkas backup (.json) dari aplikasi Buku LKB versi lama (offline)? Import di sini untuk memasukkan RHK, Kategori Tugas, catatan harian, dan foto dari berkas itu ke sistem cloud ini — tanpa menimpa data yang sudah ada di sini (aman dijalankan berkali-kali).</p>
+      <div class="actions no-print">
+        <button class="btn btn-gold" id="btnImportLegacy" type="button">📥 Import dari Backup Lama (.json)</button>
+        <input type="file" id="legacyFileInput" accept="application/json,.json" style="display:none;">
+      </div>
+      <p class="hint" id="importLegacyStatus"></p>
+
       <p class="hint" style="text-align:center;margin-top:22px;">Data tersimpan di Supabase (cloud pribadi Anda) — bukan di perangkat ini.</p>
     </section>
 
@@ -2216,6 +2224,140 @@
       await onLoggedIn(data.session.user);
     }
   })();
+
+  // ================= IMPORT DATA LAMA (dari backup .json versi offline) =================
+  function parseBulanTahunKey(key){
+    // key format lama: "Juli 2026"
+    const parts = key.trim().split(/\s+/);
+    if(parts.length<2) return null;
+    const tahun = Number(parts[parts.length-1]);
+    const bulan = parts.slice(0, -1).join(' ');
+    if(!BULAN.includes(bulan) || !tahun) return null;
+    return {bulan, tahun};
+  }
+
+  async function dataUriToBlob(dataUri){
+    const res = await fetch(dataUri);
+    return await res.blob();
+  }
+
+  async function importLegacyBackup(file){
+    const statusEl = document.getElementById('importLegacyStatus');
+    let backup;
+    try{
+      const text = await file.text();
+      backup = JSON.parse(text);
+    }catch(err){
+      statusEl.textContent = 'Berkas tidak valid atau rusak.';
+      return;
+    }
+    const legacyState = backup && backup.state;
+    if(!legacyState || !legacyState.months){
+      statusEl.textContent = 'Format berkas ini tidak dikenali sebagai backup Buku LKB.';
+      return;
+    }
+
+    const legacyRhk = legacyState.rhkList || [];
+    const monthKeys = Object.keys(legacyState.months).filter(k=> parseBulanTahunKey(k));
+    let totalKategori=0, totalLog=0;
+    monthKeys.forEach(k=>{
+      const m = legacyState.months[k];
+      Object.values(m.sections||{}).forEach(rows=> totalKategori += (rows||[]).length);
+      totalLog += (m.dailyLog||[]).length;
+    });
+
+    const pesanKonfirmasi = `Import ${legacyRhk.length} RHK, ${totalKategori} kategori tugas, dan ${totalLog} catatan harian dari ${monthKeys.length} bulan (${monthKeys.join(', ')})?\n\nData yang sudah ada di sistem cloud TIDAK akan ditimpa/dihapus.`;
+    if(!confirm(pesanKonfirmasi)) return;
+
+    const btn = document.getElementById('btnImportLegacy');
+    btn.disabled = true;
+    statusEl.textContent = 'Mengimport RHK…';
+
+    try{
+      // 1) RHK
+      for(const r of legacyRhk){
+        const payload = {
+          id: r.id, user_id: currentUser.id, nama: r.nama, jenis: r.jenis||'Utama', catatan: r.catatan||'',
+          kuantitas_satuan: (r.kuantitas&&r.kuantitas.satuan)||'', kuantitas_target: (r.kuantitas&&r.kuantitas.target)||'',
+          kualitas_satuan: (r.kualitas&&r.kualitas.satuan)||'', kualitas_target: (r.kualitas&&r.kualitas.target)||'',
+          waktu_satuan: (r.waktu&&r.waktu.satuan)||'Bulan', waktu_target: (r.waktu&&r.waktu.target)||'12',
+          manual_realisasi: r.manualRealisasi || {kualitas:{TW1:'',TW2:'',TW3:'',TW4:''}, waktu:{TW1:'',TW2:'',TW3:'',TW4:''}},
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await sb.from('lkb_rhk').upsert(payload, {onConflict:'id'});
+        if(error) console.error('RHK', r.id, error);
+      }
+
+      // 2) Kategori Tugas + 3) Catatan Harian, per bulan
+      const legacyPhotos = backup.photos || {};
+      let doneKategori=0, doneLog=0, doneFoto=0;
+
+      for(const key of monthKeys){
+        const bt = parseBulanTahunKey(key);
+        const m = legacyState.months[key];
+
+        for(const secId of Object.keys(m.sections||{})){
+          const rows = m.sections[secId] || [];
+          for(const r of rows){
+            // format lama: [uraian, target, real, satuan, link, rowId, rhkId, hitungKuantitas]
+            const [uraian, target, , satuan, link, rowId, rhkId, hitungKuantitas] = r;
+            const payload = {
+              id: rowId, user_id: currentUser.id, bulan: bt.bulan, tahun: bt.tahun, section_id: secId,
+              uraian: uraian||'', target: Number(target)||0, satuan: satuan||'', link_eviden: link||'',
+              rhk_id: rhkId || null, hitung_kuantitas: hitungKuantitas==='0'?false:true, urutan: Date.now()+doneKategori,
+              updated_at: new Date().toISOString()
+            };
+            const { error } = await sb.from('lkb_kategori_tugas').upsert(payload, {onConflict:'id'});
+            if(error){ console.error('Kategori', rowId, error); continue; }
+            doneKategori++;
+          }
+        }
+        statusEl.textContent = `Mengimport kategori tugas… (${doneKategori}/${totalKategori})`;
+
+        for(const en of (m.dailyLog||[])){
+          let hasPhoto = false, fotoPath = null;
+          if(en.hasPhoto && legacyPhotos[en.id]){
+            try{
+              const blob = await dataUriToBlob(legacyPhotos[en.id]);
+              fotoPath = await uploadPhoto(en.id, blob);
+              hasPhoto = true;
+              doneFoto++;
+            }catch(err){ console.error('Foto', en.id, err); }
+          }
+          const payload = {
+            id: en.id, user_id: currentUser.id, kategori_tugas_id: en.rowId,
+            tanggal_mulai: en.tanggalMulai, tanggal_selesai: en.tanggalSelesai||en.tanggalMulai,
+            jumlah: Number(en.jumlah)||0, rincian: en.rincian||'', catatan: en.catatan||'',
+            has_photo: hasPhoto, foto_keterangan: en.fotoKeterangan||'', foto_path: fotoPath
+          };
+          const { error } = await sb.from('lkb_daily_log').upsert(payload, {onConflict:'id'});
+          if(error){ console.error('DailyLog', en.id, error); continue; }
+          doneLog++;
+          statusEl.textContent = `Mengimport catatan harian… (${doneLog}/${totalLog})`;
+        }
+      }
+
+      statusEl.textContent = `✅ Selesai! ${legacyRhk.length} RHK, ${doneKategori} kategori tugas, ${doneLog} catatan harian, ${doneFoto} foto berhasil diimport.`;
+
+      // muat ulang tampilan supaya data baru langsung terlihat
+      rhkList = await loadRhkList();
+      await loadMonth();
+    }catch(err){
+      console.error(err);
+      statusEl.textContent = 'Terjadi kendala saat import. Sebagian data mungkin sudah masuk — coba jalankan lagi (aman diulang).';
+    }
+    btn.disabled = false;
+  }
+
+  document.getElementById('btnImportLegacy').addEventListener('click', ()=>{
+    document.getElementById('legacyFileInput').click();
+  });
+  document.getElementById('legacyFileInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    await importLegacyBackup(file);
+    e.target.value = '';
+  });
 
   // ================= PWA: Install ke Perangkat =================
   if('serviceWorker' in navigator){

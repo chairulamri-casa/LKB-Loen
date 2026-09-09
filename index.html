@@ -347,11 +347,21 @@
         </div>
 
         <div><label>Jumlah Realisasi</label><input type="number" id="logJumlah" value="1" min="0" step="1"></div>
-        <div><label>Link Eviden Google Drive (opsional)</label><input type="text" id="logCatatan" placeholder="https://drive.google.com/…"></div>
+        <div class="full">
+          <label>Link/Dokumen Eviden (opsional)</label>
+          <input type="text" id="logCatatan" placeholder="https://drive.google.com/… (atau upload langsung di bawah)">
+          <div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label class="btn btn-ghost" for="logDokumen" style="margin:0;cursor:pointer;font-size:12.5px;padding:8px 14px;">📎 Upload Dokumen (PDF/Word/dll)</label>
+            <input type="file" id="logDokumen" style="display:none;">
+            <span class="hint" id="dokumenUploadStatus" style="margin:0;"></span>
+          </div>
+          <p class="hint" style="margin-top:4px;">Upload di sini otomatis mengisi kolom link di atas — tidak perlu lagi ke Google Drive manual.</p>
+        </div>
 
         <div class="full">
           <label>Foto Eviden (opsional)</label>
           <input type="file" id="logFoto" accept="image/*">
+          <p class="hint" style="margin-top:4px;">Hanya untuk gambar (JPG/PNG). Untuk PDF/Word/dokumen lain, gunakan kolom "Link Eviden Google Drive" di atas.</p>
           <div class="photo-preview-box" id="photoPreviewBox" style="display:none;">
             <img id="photoPreviewImg" src="" alt="">
             <button type="button" class="photo-remove-btn" id="btnRemovePhoto">Hapus foto ini</button>
@@ -1238,11 +1248,47 @@
     }
   });
 
+  function sanitizeStorageName(name){
+    return name.replace(/[^a-zA-Z0-9.\-_]+/g, '_');
+  }
+
+  document.getElementById('logDokumen').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const statusEl = document.getElementById('dokumenUploadStatus');
+    if(file.size > 20*1024*1024){
+      alert(`Berkas "${file.name}" terlalu besar (maks. 20MB). Coba kompres dulu atau pakai Google Drive untuk berkas sebesar ini.`);
+      e.target.value = '';
+      return;
+    }
+    statusEl.textContent = 'Mengupload…';
+    try{
+      const path = `${currentUser.id}/${Date.now()}-${sanitizeStorageName(file.name)}`;
+      const { error } = await sb.storage.from('lkb-dokumen').upload(path, file, {upsert:true});
+      if(error) throw error;
+      const { data } = sb.storage.from('lkb-dokumen').getPublicUrl(path);
+      document.getElementById('logCatatan').value = data.publicUrl;
+      statusEl.textContent = `✅ Terupload: ${file.name}`;
+    }catch(err){
+      statusEl.textContent = '';
+      alert('Gagal upload dokumen: ' + (err.message||'coba lagi.'));
+    }
+    e.target.value = '';
+  });
+
   document.getElementById('logFoto').addEventListener('change', async (e)=>{
     const file = e.target.files[0];
     if(!file) return;
     const captionWrap = document.getElementById('fotoCaptionWrap');
     const captionInput = document.getElementById('logFotoCaption');
+
+    if(!file.type || !file.type.startsWith('image/')){
+      alert(`Berkas "${file.name}" bukan gambar (${file.type||'tipe tidak dikenali'}).\n\nKolom "Foto Eviden" hanya menerima JPG/PNG. Untuk PDF/Word/dokumen lain, upload dulu ke Google Drive lalu tempel link-nya di kolom "Link Eviden Google Drive".`);
+      e.target.value = '';
+      setSaveStatus('Foto tidak disimpan — berkas bukan gambar.');
+      return;
+    }
+
     try{
       setSaveStatus('Memproses foto…');
       const blob = await compressImageAuto(file);
@@ -1257,6 +1303,8 @@
       }
       setSaveStatus('Foto siap dilampirkan.');
     }catch(err){
+      alert(`Gagal memproses berkas "${file.name}" sebagai foto. Coba pilih foto lain (JPG/PNG).`);
+      e.target.value = '';
       setSaveStatus('Foto gagal diproses, coba pilih foto lain.');
     }
   });

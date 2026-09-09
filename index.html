@@ -592,6 +592,15 @@
   function rid(){ return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function sanitizeFilename(s){ return String(s==null?'':s).replace(/[\\/:*?"<>|]/g,'').trim(); }
+  function linkify(text){
+    // Kalau teksnya berupa URL (http/https), ubah jadi hyperlink beneran (bisa diklik
+    // di hasil Cetak/PDF maupun Word). Kalau bukan URL, tampilkan sebagai teks biasa.
+    const t = String(text==null?'':text).trim();
+    if(/^https?:\/\/\S+$/i.test(t)){
+      return `<a href="${esc(t)}" target="_blank" rel="noopener" style="color:#146354;text-decoration:underline;word-break:break-all;">${esc(t)}</a>`;
+    }
+    return esc(t);
+  }
 
   function setSaveStatus(text){
     const el = document.getElementById('saveStatus');
@@ -1501,7 +1510,7 @@
         <td>${esc(kategori)}</td>
         <td>${esc(rincianText)}</td>
         <td style="text-align:center;">${esc(entry.jumlah)}</td>
-        <td>${entry.hasPhoto? `<span class="photo-flag" data-view-photo="${entry.id}">📷 Lihat foto</span><br>`:''}${esc(catatanText)}</td>
+        <td>${entry.hasPhoto? `<span class="photo-flag" data-view-photo="${entry.id}">📷 Lihat foto</span><br>`:''}${linkify(catatanText)}</td>
         <td style="white-space:nowrap;">
           <button class="edit-btn" data-edit-log="${entry.id}" title="Edit" type="button">✎</button>
           <button class="row-del no-print" data-del-log="${entry.id}" title="Hapus" type="button">✕</button>
@@ -1801,8 +1810,8 @@
           const rowId = tr.dataset.rid;
           const entriesForRow = dailyLog.filter(en=>en.rowId===rowId && en.catatan && en.catatan.trim());
           let any=false;
-          if(linkKategori){ evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">Umum</td><td>${esc(linkKategori)}</td></tr>`; any=true; }
-          entriesForRow.forEach(en=>{ evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">${esc(formatTanggal(en.tanggalMulai,en.tanggalSelesai))}</td><td>${esc(en.catatan.trim())}</td></tr>`; any=true; });
+          if(linkKategori){ evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">Umum</td><td>${linkify(linkKategori)}</td></tr>`; any=true; }
+          entriesForRow.forEach(en=>{ evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">${esc(formatTanggal(en.tanggalMulai,en.tanggalSelesai))}</td><td>${linkify(en.catatan.trim())}</td></tr>`; any=true; });
           if(!any) evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">-</td><td style="color:#888;font-style:italic;">Belum ada link eviden</td></tr>`;
         });
         bodyHtml += `<table><thead><tr><th>Kategori Tugas</th><th style="width:90px;">Tanggal</th><th>Link Bukti Dukung</th></tr></thead><tbody>${evRows}</tbody></table>`;
@@ -1889,7 +1898,7 @@
         const target=tr.querySelector('[data-f="target"]').value, real=tr.querySelector('[data-f="real"]').value;
         const satuan=tr.querySelector('[data-f="satuan"]').value, link=tr.querySelector('[data-f="link"]').value.trim();
         const s=statusFor(target, real);
-        bodyRows += `<tr><td style="text-align:center;">${no}</td><td>${esc(uraian)}</td><td style="text-align:center;">${esc(target)}</td><td style="text-align:center;">${esc(real)}</td><td style="text-align:center;">${esc(satuan)}</td><td>${esc(link)||'[Link Drive Bukti]'}</td><td style="text-align:center;">${s.label}</td></tr>`;
+        bodyRows += `<tr><td style="text-align:center;">${no}</td><td>${esc(uraian)}</td><td style="text-align:center;">${esc(target)}</td><td style="text-align:center;">${esc(real)}</td><td style="text-align:center;">${esc(satuan)}</td><td>${link?linkify(link):'[Link Drive Bukti]'}</td><td style="text-align:center;">${s.label}</td></tr>`;
         no++;
       });
     });
@@ -1910,7 +1919,7 @@
         const sec=SECTIONS.find(s=>s.id===entry.sectionId);
         const rincianText=entry.rincian||entry.catatan||'-';
         const catatanText=entry.rincian?(entry.catatan||'-'):'-';
-        logRows += `<tr><td>${esc(formatTanggal(entry.tanggalMulai,entry.tanggalSelesai))}</td><td style="text-align:center;">${sec?sec.roman:'-'}</td><td>${esc(kategori)}</td><td>${esc(rincianText)}</td><td style="text-align:center;">${esc(entry.jumlah)}</td><td>${esc(catatanText)}</td></tr>`;
+        logRows += `<tr><td>${esc(formatTanggal(entry.tanggalMulai,entry.tanggalSelesai))}</td><td style="text-align:center;">${sec?sec.roman:'-'}</td><td>${esc(kategori)}</td><td>${esc(rincianText)}</td><td style="text-align:center;">${esc(entry.jumlah)}</td><td>${linkify(catatanText)}</td></tr>`;
       });
       lampiranHtml = `<p class="lamp-title">LAMPIRAN — RINCIAN CATATAN KERJA HARIAN</p><table><thead><tr><th style="width:90px;">Tanggal</th><th style="width:26px;">Kat.</th><th>Kategori Tugas</th><th>Uraian Kegiatan</th><th style="width:34px;">Jml</th><th>Eviden/Catatan</th></tr></thead><tbody>${logRows}</tbody></table>`;
     }

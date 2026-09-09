@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku LKB Cloud — Pendidikan Madrasah</title>
+<style>
+  :root{
+    --paper:#F6F3EA;
+    --paper-dark:#EEE8D8;
+    --card:#FDFCF7;
+    --ink:#20281F;
+    --ink-soft:#5B6259;
+    --green-deep:#0B4632;
+    --green-mid:#146354;
+    --green-pale:#E4EEE7;
+    --gold:#B0812B;
+    --gold-pale:#F1E4C6;
+    --line:#D9D2BE;
+    --danger:#A8402A;
+    --danger-pale:#F5E3DD;
+    --ok:#3E7A4B;
+    --ok-pale:#E3EFE3;
+    --warn:#B0812B;
+    --warn-pale:#F6EDD8;
+    --radius:10px;
+    --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;padding:0;
+    background:radial-gradient(1200px 600px at 100% -10%, var(--paper-dark), transparent), var(--paper);
+    color:var(--ink);font-family:var(--sans);line-height:1.45;
+  }
+
+  /* ---------- Layar Login ---------- */
+  #authScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .auth-card{
+    width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:32px 28px;box-shadow:0 10px 40px rgba(11,70,50,.08);
+  }
+  .auth-card .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-mid);font-weight:700;margin:0 0 4px;text-align:center;}
+  .auth-card h1{font-family:var(--serif);font-size:22px;margin:0 0 4px;color:var(--green-deep);text-align:center;}
+  .auth-card .sub{color:var(--ink-soft);font-size:12.5px;text-align:center;margin:0 0 22px;}
+  .auth-field{margin-bottom:14px;}
+  .auth-field label{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;font-weight:600;}
+  .auth-field input{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;
+    font-size:14px;font-family:var(--sans);background:#fff;color:var(--ink);
+  }
+  .auth-field input:focus{outline:2px solid var(--green-mid);outline-offset:1px;}
+  .auth-btn{
+    width:100%;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:var(--sans);background:var(--green-deep);color:#fff;margin-top:6px;
+  }
+  .auth-btn:hover{background:var(--green-mid);}
+  .auth-btn:disabled{opacity:.6;cursor:not-allowed;}
+  .auth-switch{text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:16px;}
+  .auth-switch a{color:var(--green-mid);font-weight:700;cursor:pointer;text-decoration:underline;}
+  .auth-msg{
+    font-size:12.5px;padding:10px 12px;border-radius:8px;margin-bottom:14px;display:none;
+  }
+  .auth-msg.show{display:block;}
+  .auth-msg.error{background:var(--danger-pale);color:var(--danger);}
+  .auth-msg.ok{background:var(--ok-pale);color:var(--ok);}
+  .auth-loading{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+
+  /* ---------- Cards / Forms (dipakai di dalam panel) ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+  .grid-id{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+  .grid-id .full{grid-column:1/-1;}
+  .field-divider{grid-column:1/-1;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;border-top:1px dashed var(--line);padding-top:10px;margin-top:2px;}
+  label{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;font-weight:600;}
+  input[type=text], input[type=date], input[type=number], select, textarea.plain{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;
+    font-size:13.5px;font-family:var(--sans);background:#fff;color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--green-mid);outline-offset:1px;}
+
+  .log-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .log-grid .full{grid-column:1/-1;}
+  .new-uraian-box{grid-column:1/-1;background:var(--paper-dark);border:1px dashed var(--gold);border-radius:8px;padding:12px;display:none;gap:10px;grid-template-columns:2fr 1fr 1fr;}
+  .new-uraian-box.show{display:grid;}
+  .log-submit-row{display:flex;align-items:center;gap:12px;margin-top:4px;grid-column:1/-1;flex-wrap:wrap;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);padding:6px 8px;border-bottom:1px solid var(--line);font-weight:700;}
+  tbody td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  .cell-input{width:100%;border:1px solid transparent;background:transparent;padding:6px 7px;border-radius:6px;font-size:13px;font-family:var(--sans);color:var(--ink);resize:vertical;}
+  .cell-input:hover{border-color:var(--line);background:#fff;}
+  .cell-input:focus{outline:none;border-color:var(--green-mid);background:#fff;}
+  .cell-input[readonly]{background:var(--green-pale);color:var(--green-deep);font-weight:700;cursor:not-allowed;}
+  .real-note{display:block;font-size:9px;color:var(--ink-soft);text-transform:none;font-weight:400;margin-top:2px;text-align:center;}
+  .rincian-toggle{font-size:11px;color:var(--green-mid);cursor:pointer;margin-top:6px;font-weight:600;user-select:none;}
+  .rincian-toggle:hover{text-decoration:underline;}
+  .rincian-toggle.open{color:var(--gold);}
+  .rincian-list{list-style:none;margin:6px 0 0;padding:8px 10px;background:var(--paper-dark);border-radius:6px;font-size:11.5px;color:var(--ink-soft);}
+  .rincian-list li{padding:3px 0;border-bottom:1px dashed var(--line);}
+  .rincian-list li:last-child{border-bottom:none;}
+  .rincian-empty{font-style:italic;}
+  .num{width:64px;text-align:center;}
+  .col-uraian{min-width:230px;}
+  .col-link{min-width:120px;}
+  .status-pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap;}
+  .st-ok{background:var(--ok-pale);color:var(--ok);}
+  .st-warn{background:var(--warn-pale);color:var(--warn);}
+  .st-danger{background:var(--danger-pale);color:var(--danger);}
+  .row-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;line-height:1;}
+  .row-del:hover{background:var(--danger-pale);color:var(--danger);}
+  .edit-btn{background:none;border:none;color:var(--green-mid);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;}
+  .edit-btn:hover{background:var(--green-pale);}
+  .add-row{margin-top:10px;background:none;border:1px dashed var(--green-mid);color:var(--green-mid);padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .add-row:hover{background:var(--green-pale);}
+  .log-table td, .log-table th{font-size:12.5px;}
+  .badge-roman{display:inline-block;font-size:10px;font-weight:700;background:var(--green-deep);color:#fff;border-radius:5px;padding:2px 6px;}
+  .log-empty{text-align:center;color:var(--ink-soft);padding:16px;font-size:13px;}
+
+  .photo-preview-box{margin-top:8px;display:flex;align-items:center;gap:10px;}
+  .photo-preview-box img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
+  .photo-remove-btn{font-size:11px;color:var(--danger);background:none;border:1px solid var(--danger);border-radius:6px;padding:5px 9px;cursor:pointer;font-weight:600;}
+  .photo-flag{cursor:pointer;color:var(--green-mid);font-weight:700;font-size:11.5px;}
+  .photo-flag:hover{text-decoration:underline;}
+  .editing-banner{background:var(--gold-pale);border:1px solid var(--gold);border-radius:8px;padding:9px 14px;font-size:12.5px;color:var(--green-deep);display:none;align-items:center;justify-content:space-between;margin-bottom:12px;font-weight:600;flex-wrap:wrap;gap:8px;}
+  .editing-banner.show{display:flex;}
+  .reminder-banner{background:var(--warn-pale);border:1px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:12.5px;color:#6b4f14;font-weight:600;margin-bottom:16px;display:none;align-items:center;gap:8px;}
+  .reminder-banner.show{display:flex;}
+  .lightbox-overlay{position:fixed;inset:0;background:rgba(15,20,15,.82);display:flex;align-items:center;justify-content:center;z-index:9999;padding:26px;}
+  .lightbox-overlay img{max-width:90vw;max-height:78vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+  .lightbox-cap{color:#F6F3EA;text-align:center;margin-top:12px;font-size:13px;max-width:640px;}
+  .lightbox-close{position:absolute;top:20px;right:24px;color:#fff;font-size:26px;cursor:pointer;background:none;border:none;line-height:1;}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;align-items:center;}
+  .btn{border:none;border-radius:8px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+  .btn-primary{background:var(--green-deep);color:#fff;}
+  .btn-primary:hover{background:var(--green-mid);}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-gold:hover{background:#986e21;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-ghost:hover{background:var(--paper-dark);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+
+  .summary-strip{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;}
+  .stat{flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;}
+  .stat .n{font-family:var(--serif);font-size:24px;color:var(--green-deep);font-weight:700;}
+  .stat .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+
+  textarea#copyOutput, textarea#ekinerjaCopyOutput{
+    width:100%;min-height:160px;border:1px solid var(--line);border-radius:8px;padding:12px;
+    font-family:'Courier New',monospace;font-size:12px;color:var(--ink-soft);background:var(--paper-dark);resize:vertical;
+  }
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:8px;}
+
+  /* ---------- Shell ---------- */
+  .app-shell{max-width:1180px;margin:0 auto;display:flex;align-items:flex-start;gap:26px;padding:28px 18px 60px;}
+  .main-content{flex:1;min-width:0;}
+  .content-header{margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;}
+  .content-header h1{font-family:var(--serif);font-size:24px;margin:0 0 4px;color:var(--green-deep);}
+  .content-header .sub{font-size:13px;color:var(--ink-soft);}
+  .content-header .sub b{color:var(--ink);}
+
+  .panel{display:none;}
+  .panel.active{display:block;animation:panelIn .18s ease;}
+  @keyframes panelIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .panel-title{font-family:var(--serif);font-size:17px;color:var(--green-deep);font-weight:700;display:flex;align-items:center;gap:10px;margin:0 0 16px;padding-bottom:12px;border-bottom:2px solid var(--green-pale);}
+  .panel-title .roman{font-size:11px;background:var(--green-deep);color:#fff;border-radius:5px;padding:3px 8px;font-family:var(--sans);font-weight:700;letter-spacing:.04em;}
+
+  .side-nav{width:252px;flex-shrink:0;order:-1;position:sticky;top:22px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px;display:flex;flex-direction:column;gap:18px;}
+  .nav-brand{border-bottom:1px dashed var(--line);padding-bottom:14px;}
+  .nav-brand .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-mid);font-weight:700;margin:0 0 4px;}
+  .nav-brand h1{font-family:var(--serif);font-size:18px;margin:0 0 3px;color:var(--green-deep);font-weight:700;}
+  .nav-brand .sub{font-size:11px;margin:0;color:var(--ink-soft);}
+  .nav-seal-wrap{display:flex;justify-content:center;}
+  .nav-seal{width:96px;height:96px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;background:var(--paper);border:2px dashed var(--gold);}
+  .nav-seal svg{position:absolute;inset:0;}
+  .nav-seal-inner{position:relative;text-align:center;font-family:var(--serif);color:var(--green-deep);}
+  .nav-seal-pct{font-size:18px;font-weight:700;display:block;line-height:1;}
+  .nav-seal-label{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-top:2px;}
+  .nav-stats{display:flex;flex-direction:column;}
+  .nav-stat-row{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--ink-soft);padding:5px 2px;border-bottom:1px dashed var(--line);}
+  .nav-stat-row:last-child{border-bottom:none;}
+  .nav-stat-row b{font-family:var(--serif);font-size:14px;color:var(--green-deep);}
+  .nav-list{display:flex;flex-direction:column;gap:5px;}
+  .nav-item{display:flex;align-items:center;gap:10px;text-align:left;width:100%;background:none;border:1px solid transparent;border-radius:8px;padding:10px 11px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:var(--sans);transition:background .15s ease, color .15s ease;}
+  .nav-item:hover{background:var(--green-pale);}
+  .nav-item.active{background:var(--green-deep);color:#fff;}
+  .nav-item.active .nav-letter{background:var(--gold);color:#fff;}
+  .nav-letter{flex-shrink:0;width:21px;height:21px;border-radius:6px;background:var(--green-pale);color:var(--green-deep);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;font-family:var(--sans);}
+  .nav-footer{border-top:1px dashed var(--line);padding-top:12px;font-size:11px;color:var(--ink-soft);}
+  .nav-footer #saveStatus, .nav-footer #userEmail{display:block;}
+  .nav-footer #userEmail{font-weight:700;color:var(--green-deep);margin-bottom:4px;word-break:break-all;}
+  .nav-signout{background:none;border:none;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-top:6px;text-decoration:underline;}
+
+  @media (max-width: 860px){
+    .app-shell{flex-direction:column;}
+    .side-nav{width:100%;position:static;order:-1;}
+    .nav-list{flex-direction:row;flex-wrap:wrap;}
+    .nav-item{flex:1 1 auto;justify-content:center;}
+    .log-grid, .grid-id{grid-template-columns:1fr;}
+    .new-uraian-box{grid-template-columns:1fr;}
+    .btn{padding:13px 18px;font-size:14.5px;}
+    .actions{gap:8px;}
+  }
+  @media (max-width: 480px){
+    body{font-size:15px;}
+    .content-header h1{font-size:20px;}
+    table{font-size:12px;}
+  }
+
+  /* ---------- Print sheet ---------- */
+  #printSheet{display:none;font-family:'Segoe UI','Century Gothic',Calibri,Arial,sans-serif;color:#232A21;}
+  #printSheet table{width:100%;border-collapse:collapse;font-size:10.3px;}
+  #printSheet th, #printSheet td{border:1px solid #000;padding:6px 8px;vertical-align:top;text-align:left;}
+  #printSheet th{background:#0B4632;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;text-align:center;padding:8px;}
+  #printSheet tbody tr:nth-child(even){background:#F5F2E8;}
+  #printSheet .grp-row td{background:#B0812B;color:#fff;font-weight:700;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;}
+  #printSheet .ph1{text-align:center;margin:0 0 4px;font-size:19px;font-weight:700;color:#0B4632;letter-spacing:.02em;}
+  #printSheet .ph2{text-align:center;margin:0 0 6px;font-size:10.5px;color:#6B6252;text-transform:uppercase;letter-spacing:.12em;font-weight:600;}
+  #printSheet .hr-accent{width:70px;height:3px;background:#B0812B;margin:0 auto 16px;border-radius:2px;}
+  #printSheet .pid{width:100%;border-collapse:collapse;font-size:10.8px;margin-bottom:18px;}
+  #printSheet .pid td{border:none;padding:3px 6px;}
+  #printSheet .pid td.k{width:150px;color:#6B6252;font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.03em;vertical-align:top;padding-top:5px;}
+  #printSheet .lamp-title{margin:24px 0 10px;font-weight:700;font-size:11.5px;color:#0B4632;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #B0812B;padding-bottom:5px;}
+  #printSheet .sig{width:100%;margin-top:36px;font-size:10.8px;border-collapse:collapse;}
+  #printSheet .sig td{border:none;text-align:center;vertical-align:top;padding:0 10px;line-height:1.3;}
+  #printSheet .sig .place{text-align:right;padding-bottom:22px;font-size:10.8px;color:#232A21;}
+  #printSheet .sig .role{padding-bottom:70px;color:#6B6252;}
+  #printSheet .sig .name{font-weight:700;}
+  #printSheet .sig .name .nm{text-decoration:underline;color:#0B4632;}
+  @media print{
+    body{padding:0;background:#fff;}
+    body *{visibility:hidden;}
+    #printSheet, #printSheet *{visibility:visible;}
+    #printSheet{display:block;position:absolute;top:0;left:0;width:100%;padding:14mm 12mm;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LAYAR LOGIN ================= -->
+<div id="authScreen">
+  <div class="auth-card">
+    <p class="eyebrow">Bidang Pendidikan Madrasah</p>
+    <h1 id="authTitle">Masuk ke Buku LKB</h1>
+    <p class="sub" id="authSub">Cloud — data tersimpan aman &amp; bisa diakses dari perangkat mana saja</p>
+
+    <div class="auth-msg" id="authMsg"></div>
+
+    <div class="auth-field" id="authEmailField">
+      <label>Email</label>
+      <input type="email" id="authEmail" autocomplete="username" placeholder="nama@email.com">
+    </div>
+    <div class="auth-field" id="authPasswordField">
+      <label>Kata Sandi</label>
+      <input type="password" id="authPassword" autocomplete="current-password" placeholder="Minimal 6 karakter">
+    </div>
+    <div class="auth-field" id="authPasswordConfirmField" style="display:none;">
+      <label>Ulangi Kata Sandi Baru</label>
+      <input type="password" id="authPasswordConfirm" autocomplete="new-password" placeholder="Ketik ulang kata sandi baru">
+    </div>
+
+    <button class="auth-btn" id="btnAuthSubmit" type="button">Masuk</button>
+
+    <p class="auth-switch" id="authForgotRow"><a id="authForgotLink">Lupa kata sandi?</a></p>
+    <p class="auth-switch" id="authSwitch">Belum punya akun? <a id="authSwitchLink">Daftar di sini</a></p>
+  </div>
+</div>
+
+<!-- ================= APLIKASI UTAMA (tampil setelah login) ================= -->
+<div class="app-shell" id="appShell" style="display:none;">
+
+  <main class="main-content">
+
+    <div class="content-header">
+      <div>
+        <h1>Buku LKB Cloud</h1>
+        <p class="sub">Periode berjalan: <b id="headerPeriode">—</b></p>
+      </div>
+    </div>
+
+    <!-- PANEL A: IDENTITAS -->
+    <section class="panel active" id="panelIdentitas" data-panel="identitas">
+      <p class="panel-title"><span class="roman">A</span> Identitas, Periode &amp; Pengesahan</p>
+      <div class="grid-id">
+        <div><label>Nama Lengkap &amp; Gelar</label><input type="text" id="fNama"></div>
+        <div><label>NIP</label><input type="text" id="fNip"></div>
+        <div class="full"><label>Unit Kerja</label><input type="text" id="fUnit" value="Bidang Pendidikan Madrasah, Kanwil Kemenag Provinsi Aceh"></div>
+        <div class="full"><label>Jabatan</label><input type="text" id="fJabatan" value="Pelaksana Analis Kebijakan Publik / Ketua Tim GTK"></div>
+        <div><label>Pangkat, Golongan Ruang</label><input type="text" id="fPangkat"></div>
+        <div><label>Bulan Laporan</label><select id="fBulan"></select></div>
+        <div><label>Tahun</label><input type="text" id="fTahun" value="2026"></div>
+
+        <div class="field-divider">Untuk Lembar Pengesahan (Cetak &amp; Word)</div>
+        <div><label>Tempat Penetapan</label><input type="text" id="fTempat" value="Banda Aceh"></div>
+        <div><label>Tanggal Penetapan</label><input type="text" id="fTanggal" placeholder="cth. 31 Juli 2026"></div>
+        <div><label>Nama Kepala Bidang</label><input type="text" id="fNamaKabid"></div>
+        <div><label>NIP Kepala Bidang</label><input type="text" id="fNipKabid"></div>
+      </div>
+    </section>
+
+    <!-- PANEL B: CATATAN KERJA HARIAN -->
+    <section class="panel" id="panelHarian" data-panel="harian" style="display:none;">
+      <p class="panel-title"><span class="roman">B</span> Catatan Kerja Harian</p>
+      <div class="reminder-banner" id="todayReminder"><span>⏰</span><span id="todayReminderText"></span></div>
+      <p class="hint" style="margin-top:0;">Catat kegiatan setiap hari di sini. Kolom "Real." pada Capaian Kinerja (panel C) otomatis mengikuti total catatan yang dikaitkan ke tiap kategori tugas.</p>
+
+      <div class="editing-banner" id="logEditingBanner">
+        <span>✎ Sedang mengedit catatan tanggal <b id="logEditingBannerDate"></b></span>
+        <button type="button" class="btn btn-ghost" id="btnCancelLogEdit" style="padding:5px 12px;font-size:12px;">Batal Edit</button>
+      </div>
+
+      <div class="log-grid">
+        <div><label>Tanggal Mulai</label><input type="date" id="logTanggal"></div>
+        <div><label>Kelompok Tugas</label><select id="logKategori"></select></div>
+
+        <div class="full" style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="logMultiHari" style="width:auto;">
+          <label style="margin:0;text-transform:none;font-weight:600;color:var(--ink);font-size:12.5px;" for="logMultiHari">Kegiatan berlangsung beberapa hari (kepanitiaan / Monev multi-hari)</label>
+        </div>
+        <div class="full" id="tanggalSelesaiWrap" style="display:none;">
+          <label>Tanggal Selesai</label><input type="date" id="logTanggalSelesai">
+        </div>
+
+        <div class="full"><label>Kategori Tugas Terkait</label><select id="logUraian"></select></div>
+
+        <div class="new-uraian-box" id="newUraianBox">
+          <div><label>Nama Kategori Tugas Baru</label><input type="text" id="logUraianBaru" placeholder="cth. Melakukan identifikasi dan pengumpulan data…"></div>
+          <div><label>Target (bulan ini)</label><input type="number" id="logTargetBaru" value="1" min="0"></div>
+          <div><label>Satuan</label><input type="text" id="logSatuanBaru" value="Kegiatan"></div>
+        </div>
+
+        <div class="full">
+          <label>Uraian Kegiatan (rincian hari ini)</label>
+          <input type="text" id="logRincian" placeholder="cth. Mendata jumlah guru PPPK di madrasah wilayah kerja">
+        </div>
+
+        <div><label>Jumlah Realisasi</label><input type="number" id="logJumlah" value="1" min="0" step="1"></div>
+        <div><label>Link Eviden Google Drive (opsional)</label><input type="text" id="logCatatan" placeholder="https://drive.google.com/…"></div>
+
+        <div class="full">
+          <label>Foto Eviden (opsional)</label>
+          <input type="file" id="logFoto" accept="image/*">
+          <div class="photo-preview-box" id="photoPreviewBox" style="display:none;">
+            <img id="photoPreviewImg" src="" alt="">
+            <button type="button" class="photo-remove-btn" id="btnRemovePhoto">Hapus foto ini</button>
+          </div>
+        </div>
+        <div class="full" id="fotoCaptionWrap" style="display:none;">
+          <label>Keterangan Foto <span style="text-transform:none;font-weight:400;">(otomatis dari Uraian Kegiatan)</span></label>
+          <input type="text" id="logFotoCaption">
+        </div>
+
+        <div class="log-submit-row">
+          <button class="btn btn-primary" id="btnLogAdd" type="button">＋ Catat Kerja Hari Ini</button>
+          <span class="hint" style="margin:0;" id="logStatusHint"></span>
+        </div>
+      </div>
+
+      <table class="log-table" style="margin-top:18px;">
+        <thead><tr>
+          <th style="width:90px;">Tanggal</th>
+          <th style="width:34px;">Kat.</th>
+          <th>Kategori Tugas</th>
+          <th>Uraian Kegiatan</th>
+          <th style="width:44px;">Jml</th>
+          <th>Eviden/Catatan</th>
+          <th style="width:56px;"></th>
+        </tr></thead>
+        <tbody id="logListBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PANEL C: CAPAIAN KINERJA -->
+    <section class="panel" id="panelCapaian" data-panel="capaian" style="display:none;">
+      <p class="panel-title"><span class="roman">C</span> Capaian Kinerja Bulanan</p>
+      <div id="sectionsHost"></div>
+    </section>
+
+    <!-- PANEL D: EKSPOR -->
+    <section class="panel" id="panelEkspor" data-panel="ekspor" style="display:none;">
+      <p class="panel-title"><span class="roman">D</span> Cetak &amp; Ekspor</p>
+      <div class="actions no-print">
+        <button class="btn btn-primary" id="btnCopy">📋 Salin sebagai Teks LKB</button>
+        <button class="btn btn-gold" id="btnWord">📝 Unduh Word LKB (.doc)</button>
+        <button class="btn btn-ghost" id="btnPrint">🖨️ Cetak / Simpan PDF</button>
+      </div>
+      <p class="hint">Karena data sudah tersimpan otomatis di cloud (Supabase), Anda tidak perlu lagi backup JSON manual — cukup pastikan sudah login di perangkat mana pun untuk mengakses data yang sama.</p>
+      <textarea id="copyOutput" readonly placeholder="Klik &quot;Salin sebagai Teks LKB&quot;…"></textarea>
+
+      <div class="field-divider" style="margin-top:26px;">Laporan Khusus Work From Home (Jumat)</div>
+      <div class="actions no-print">
+        <button class="btn btn-gold" id="btnWfhPrint">🗓️ Cetak Laporan WFH</button>
+        <button class="btn btn-ghost" id="btnWfhWord">📝 Unduh Word WFH (.doc)</button>
+      </div>
+
+      <p class="hint" style="text-align:center;margin-top:22px;">Data tersimpan di Supabase (cloud pribadi Anda) — bukan di perangkat ini.</p>
+    </section>
+
+    <!-- PANEL E: REKAP TAHUNAN -->
+    <section class="panel" id="panelTahunan" data-panel="tahunan" style="display:none;">
+      <p class="panel-title"><span class="roman">E</span> Rekap Tahunan</p>
+      <div class="grid-id" style="margin-bottom:16px;max-width:260px;">
+        <div><label>Tahun</label><input type="text" id="rekapTahun" value="2026"></div>
+      </div>
+      <div class="actions no-print" style="margin-bottom:20px;">
+        <button class="btn btn-primary" id="btnRekapMuat" type="button">🔄 Muat Rekap</button>
+        <button class="btn btn-gold" id="btnRekapPrint" type="button">🖨️ Cetak Rekap Tahunan</button>
+        <button class="btn btn-ghost" id="btnRekapWord" type="button">📝 Unduh Word Rekap Tahunan</button>
+      </div>
+      <div class="summary-strip" id="rekapSummary"></div>
+      <div id="rekapChartHost" style="margin-bottom:24px;"></div>
+      <table>
+        <thead><tr><th>Bulan</th><th style="width:70px;">Target</th><th style="width:80px;">Realisasi</th><th style="width:80px;">% Capaian</th></tr></thead>
+        <tbody id="rekapTableBody"><tr><td colspan="4" class="log-empty">Klik "Muat Rekap".</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- PANEL F: RHK & E-KINERJA -->
+    <section class="panel" id="panelRhk" data-panel="rhk" style="display:none;">
+      <p class="panel-title"><span class="roman">F</span> RHK &amp; e-Kinerja</p>
+      <p class="hint" style="margin-top:0;">Input RHK sesuai SKP sekali di sini, lalu kaitkan tiap Kategori Tugas (panel C) ke RHK yang sesuai.</p>
+
+      <div class="editing-banner" id="rhkEditingBanner">
+        <span>✎ Sedang mengedit RHK</span>
+        <button type="button" class="btn btn-ghost" id="btnCancelRhkEdit" style="padding:5px 12px;font-size:12px;">Batal Edit</button>
+      </div>
+
+      <div class="log-grid">
+        <div><label>Nama RHK</label><input type="text" id="rhkNama"></div>
+        <div>
+          <label>Jenis RHK</label>
+          <select id="rhkJenis">
+            <option value="Utama">Utama (dari SKP/cascading atasan)</option>
+            <option value="Tambahan">Tambahan (tugas riil di luar RHK Utama)</option>
+          </select>
+        </div>
+        <div class="field-divider" style="grid-column:1/-1;">Indikator Kuantitas</div>
+        <div><label>Satuan</label><input type="text" id="rhkKuantitasSatuan"></div>
+        <div><label>Target Tahunan</label><input type="text" id="rhkKuantitasTarget"></div>
+        <div class="field-divider" style="grid-column:1/-1;">Indikator Kualitas</div>
+        <div><label>Satuan / Deskripsi</label><input type="text" id="rhkKualitasSatuan"></div>
+        <div><label>Target Tahunan</label><input type="text" id="rhkKualitasTarget"></div>
+        <div class="field-divider" style="grid-column:1/-1;">Indikator Waktu</div>
+        <div><label>Satuan</label><input type="text" id="rhkWaktuSatuan" value="Bulan"></div>
+        <div><label>Target Tahunan</label><input type="text" id="rhkWaktuTarget" value="12"></div>
+        <div class="full"><label>Catatan Justifikasi <span style="font-weight:400;text-transform:none;">(opsional)</span></label><input type="text" id="rhkCatatan"></div>
+        <div class="log-submit-row"><button class="btn btn-primary" id="btnRhkAdd" type="button">＋ Tambah RHK</button></div>
+      </div>
+
+      <table style="margin-top:18px;">
+        <thead><tr>
+          <th style="width:30px;">No</th><th style="width:56px;">Jenis</th><th>Nama RHK</th>
+          <th style="width:110px;">Kuantitas</th><th style="width:110px;">Kualitas</th><th style="width:90px;">Waktu</th>
+          <th style="width:60px;"></th>
+        </tr></thead>
+        <tbody id="rhkListBody"><tr><td colspan="7" class="log-empty">Belum ada RHK.</td></tr></tbody>
+      </table>
+
+      <div class="field-divider" style="margin-top:26px;">Rekap Realisasi per Triwulan</div>
+      <div class="grid-id" style="margin-bottom:14px;max-width:200px;">
+        <div><label>Tahun</label><input type="text" id="rhkRekapTahun" value="2026"></div>
+      </div>
+      <div class="actions no-print" style="margin-bottom:14px;"><button class="btn btn-ghost" id="btnRhkRekapMuat" type="button">🔄 Muat Rekap</button></div>
+      <div id="rhkRekapHost"></div>
+
+      <div class="field-divider" style="margin-top:26px;">Laporan Bukti Dukung e-Kinerja</div>
+      <div class="actions no-print">
+        <button class="btn btn-gold" id="btnEkinerjaPrint" type="button">🖨️ Cetak Bukti Dukung</button>
+        <button class="btn btn-ghost" id="btnEkinerjaWord" type="button">📝 Unduh Word Bukti Dukung</button>
+        <button class="btn btn-ghost" id="btnEkinerjaCopy" type="button">📋 Salin sebagai Teks</button>
+      </div>
+      <textarea id="ekinerjaCopyOutput" readonly></textarea>
+    </section>
+
+  </main>
+
+  <aside class="side-nav">
+    <div class="nav-brand">
+      <p class="eyebrow">Bidang Pendidikan Madrasah</p>
+      <h1>Buku LKB Cloud</h1>
+      <p class="sub">Analis Kebijakan · Ketua Tim GTK</p>
+    </div>
+    <div class="nav-seal-wrap">
+      <div class="nav-seal">
+        <svg viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="42" fill="none" stroke="#E4EEE7" stroke-width="7"/>
+          <circle id="sealRing" cx="48" cy="48" r="42" fill="none" stroke="#146354" stroke-width="7" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9" transform="rotate(-90 48 48)"/>
+        </svg>
+        <div class="nav-seal-inner"><span class="nav-seal-pct" id="sealPct">0%</span><span class="nav-seal-label">Capaian</span></div>
+      </div>
+    </div>
+    <div class="nav-stats">
+      <div class="nav-stat-row"><span>Terlaksana</span><b id="statTerlaksana">0</b></div>
+      <div class="nav-stat-row"><span>Sebagian</span><b id="statSebagian">0</b></div>
+      <div class="nav-stat-row"><span>Belum</span><b id="statBelum">0</b></div>
+      <div class="nav-stat-row"><span>Total Kategori</span><b id="statTotal">0</b></div>
+    </div>
+    <nav class="nav-list">
+      <button class="nav-item active" data-nav="identitas" type="button"><span class="nav-letter">A</span> Identitas &amp; Pengesahan</button>
+      <button class="nav-item" data-nav="harian" type="button"><span class="nav-letter">B</span> Catatan Kerja Harian</button>
+      <button class="nav-item" data-nav="capaian" type="button"><span class="nav-letter">C</span> Capaian Kinerja</button>
+      <button class="nav-item" data-nav="ekspor" type="button"><span class="nav-letter">D</span> Cetak &amp; Ekspor</button>
+      <button class="nav-item" data-nav="tahunan" type="button"><span class="nav-letter">E</span> Rekap Tahunan</button>
+      <button class="nav-item" data-nav="rhk" type="button"><span class="nav-letter">F</span> RHK &amp; e-Kinerja</button>
+    </nav>
+    <div class="nav-footer">
+      <span id="userEmail"></span>
+      <span id="saveStatus">Siap.</span>
+      <button class="nav-signout" id="btnSignOut" type="button">Keluar</button>
+    </div>
+  </aside>
+</div>
+
+<div id="printSheet"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  // ================= KONEKSI SUPABASE =================
+  const SUPABASE_URL = 'https://llypthirfhydcttvlntf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_QKYToMdeY97TeGq4OVWdPA_CSRBdca2';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const SECTIONS = [
+    {id:'analis', roman:'I', title:'Tugas Analis Kebijakan Publik'},
+    {id:'gtk', roman:'II', title:'Tugas Ketua Tim Guru dan Tenaga Kependidikan (GTK)'},
+    {id:'umum', roman:'III', title:'Tugas Tambahan / Umum'},
+  ];
+  const TRIWULAN_BULAN = {
+    TW1: ['Januari','Februari','Maret'],
+    TW2: ['April','Mei','Juni'],
+    TW3: ['Juli','Agustus','September'],
+    TW4: ['Oktober','November','Desember']
+  };
+
+  let currentUser = null;
+  let dailyLog = [];       // entri catatan harian bulan aktif
+  let rhkList = [];        // daftar RHK milik user
+  let photoMemCache = {};  // id daily_log -> data URI (cache di memori, per sesi)
+  let editingLogId = null;
+  let editingRhkId = null;
+  let pendingPhotoBlob = null;
+  let pendingPhotoRemoved = false;
+  let captionManuallyEdited = false;
+  let appReady = false;
+  let saveTimer = null;
+  let isFirstLoad = true;
+  let panelTahunanLoaded = false, panelRhkLoaded = false;
+
+  function rid(){ return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function sanitizeFilename(s){ return String(s==null?'':s).replace(/[\\/:*?"<>|]/g,'').trim(); }
+
+  function setSaveStatus(text){
+    const el = document.getElementById('saveStatus');
+    if(el) el.textContent = text;
+  }
+
+  // ================= AUTENTIKASI =================
+  let authMode = 'signin'; // 'signin' | 'signup' | 'forgot' | 'reset'
+
+  function showAuthMsg(text, type){
+    const el = document.getElementById('authMsg');
+    el.textContent = text;
+    el.className = 'auth-msg show ' + (type||'');
+  }
+  function clearAuthMsg(){
+    const el = document.getElementById('authMsg');
+    el.className = 'auth-msg';
+    el.textContent = '';
+  }
+
+  function rewireAuthSwitchLink(handler){
+    const old = document.getElementById('authSwitchLink');
+    if(!old) return;
+    const fresh = old.cloneNode(true);
+    old.parentNode.replaceChild(fresh, old);
+    fresh.addEventListener('click', handler);
+  }
+
+  function setAuthMode(mode){
+    authMode = mode;
+    clearAuthMsg();
+    const emailField = document.getElementById('authEmailField');
+    const passField = document.getElementById('authPasswordField');
+    const passConfirmField = document.getElementById('authPasswordConfirmField');
+    const forgotRow = document.getElementById('authForgotRow');
+    const switchRow = document.getElementById('authSwitch');
+
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+    document.getElementById('authPasswordConfirm').value = '';
+
+    if(mode==='signup'){
+      document.getElementById('authTitle').textContent = 'Daftar Akun Baru';
+      document.getElementById('authSub').textContent = 'Buat akun untuk mulai memakai Buku LKB Cloud';
+      document.getElementById('btnAuthSubmit').textContent = 'Daftar';
+      emailField.style.display='block'; passField.style.display='block'; passConfirmField.style.display='none';
+      forgotRow.style.display='block'; switchRow.style.display='block';
+      switchRow.innerHTML = 'Sudah punya akun? <a id="authSwitchLink">Masuk di sini</a>';
+      rewireAuthSwitchLink(()=> setAuthMode('signin'));
+    } else if(mode==='forgot'){
+      document.getElementById('authTitle').textContent = 'Lupa Kata Sandi';
+      document.getElementById('authSub').textContent = 'Masukkan email akun Anda — kami kirimkan link untuk membuat kata sandi baru';
+      document.getElementById('btnAuthSubmit').textContent = 'Kirim Link Reset';
+      emailField.style.display='block'; passField.style.display='none'; passConfirmField.style.display='none';
+      forgotRow.style.display='none'; switchRow.style.display='block';
+      switchRow.innerHTML = 'Sudah ingat kata sandi? <a id="authSwitchLink">Kembali ke Masuk</a>';
+      rewireAuthSwitchLink(()=> setAuthMode('signin'));
+    } else if(mode==='reset'){
+      document.getElementById('authTitle').textContent = 'Buat Kata Sandi Baru';
+      document.getElementById('authSub').textContent = 'Link reset berhasil dibuka — silakan buat kata sandi baru Anda';
+      document.getElementById('btnAuthSubmit').textContent = 'Simpan Kata Sandi Baru';
+      emailField.style.display='none'; passField.style.display='block'; passConfirmField.style.display='block';
+      document.querySelector('#authPasswordField label').textContent = 'Kata Sandi Baru';
+      forgotRow.style.display='none'; switchRow.style.display='none';
+    } else {
+      document.getElementById('authTitle').textContent = 'Masuk ke Buku LKB';
+      document.getElementById('authSub').textContent = 'Cloud — data tersimpan aman & bisa diakses dari perangkat mana saja';
+      document.getElementById('btnAuthSubmit').textContent = 'Masuk';
+      document.querySelector('#authPasswordField label').textContent = 'Kata Sandi';
+      emailField.style.display='block'; passField.style.display='block'; passConfirmField.style.display='none';
+      forgotRow.style.display='block'; switchRow.style.display='block';
+      switchRow.innerHTML = 'Belum punya akun? <a id="authSwitchLink">Daftar di sini</a>';
+      rewireAuthSwitchLink(()=> setAuthMode('signup'));
+    }
+  }
+
+  document.getElementById('authForgotLink').addEventListener('click', ()=> setAuthMode('forgot'));
+  rewireAuthSwitchLink(()=> setAuthMode('signup'));
+
+  document.getElementById('btnAuthSubmit').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btnAuthSubmit');
+
+    if(authMode==='forgot'){
+      const email = document.getElementById('authEmail').value.trim();
+      if(!email){ showAuthMsg('Isi email akun Anda terlebih dahulu.', 'error'); return; }
+      btn.disabled = true; clearAuthMsg();
+      try{
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] });
+        if(error) throw error;
+        showAuthMsg('Link reset kata sandi sudah dikirim ke email Anda. Cek inbox (dan folder Spam), lalu klik link di dalamnya.', 'ok');
+      }catch(err){
+        showAuthMsg(err.message || 'Gagal mengirim link reset. Coba lagi.', 'error');
+      }
+      btn.disabled = false;
+      return;
+    }
+
+    if(authMode==='reset'){
+      const pass1 = document.getElementById('authPassword').value;
+      const pass2 = document.getElementById('authPasswordConfirm').value;
+      if(!pass1 || pass1.length<6){ showAuthMsg('Kata sandi baru minimal 6 karakter.', 'error'); return; }
+      if(pass1 !== pass2){ showAuthMsg('Kata sandi baru dan ulanginya tidak sama.', 'error'); return; }
+      btn.disabled = true; clearAuthMsg();
+      try{
+        const { error } = await sb.auth.updateUser({ password: pass1 });
+        if(error) throw error;
+        showAuthMsg('Kata sandi berhasil diubah! Silakan masuk dengan kata sandi baru Anda.', 'ok');
+        await sb.auth.signOut();
+        setTimeout(()=> setAuthMode('signin'), 1600);
+      }catch(err){
+        showAuthMsg(err.message || 'Gagal menyimpan kata sandi baru. Coba lagi.', 'error');
+      }
+      btn.disabled = false;
+      return;
+    }
+
+    // mode 'signin' / 'signup'
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if(!email || !password){ showAuthMsg('Isi email dan kata sandi terlebih dahulu.', 'error'); return; }
+    if(password.length < 6){ showAuthMsg('Kata sandi minimal 6 karakter.', 'error'); return; }
+
+    btn.disabled = true;
+    clearAuthMsg();
+    try{
+      if(authMode==='signup'){
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if(error) throw error;
+        if(data.session){
+          await onLoggedIn(data.session.user);
+        } else {
+          showAuthMsg('Pendaftaran berhasil! Silakan cek email Anda untuk konfirmasi, lalu masuk.', 'ok');
+          setAuthMode('signin');
+        }
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if(error) throw error;
+        await onLoggedIn(data.user);
+      }
+    }catch(err){
+      showAuthMsg(err.message || 'Terjadi kendala. Coba lagi.', 'error');
+    }
+    btn.disabled = false;
+  });
+
+  document.getElementById('btnSignOut').addEventListener('click', async ()=>{
+    if(!confirm('Keluar dari Buku LKB Cloud?')) return;
+    await sb.auth.signOut();
+    location.reload();
+  });
+
+  // Kalau pengguna membuka link reset dari email, Supabase otomatis mendeteksi
+  // token pemulihan di URL dan memicu event ini — tampilkan form kata sandi baru.
+  sb.auth.onAuthStateChange((event)=>{
+    if(event === 'PASSWORD_RECOVERY'){
+      document.getElementById('authScreen').style.display = 'flex';
+      document.getElementById('appShell').style.display = 'none';
+      setAuthMode('reset');
+    }
+  });
+
+  async function onLoggedIn(user){
+    currentUser = user;
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'flex';
+    document.getElementById('userEmail').textContent = user.email;
+    await initApp();
+  }
+
+  // ================= LAPISAN DATA (Supabase) =================
+
+  async function loadProfile(){
+    const { data, error } = await sb.from('lkb_profiles').select('*').eq('user_id', currentUser.id).maybeSingle();
+    if(error){ console.error(error); return null; }
+    return data;
+  }
+
+  async function saveProfile(){
+    const payload = {
+      user_id: currentUser.id,
+      nama: document.getElementById('fNama').value,
+      nip: document.getElementById('fNip').value,
+      unit_kerja: document.getElementById('fUnit').value,
+      jabatan: document.getElementById('fJabatan').value,
+      pangkat: document.getElementById('fPangkat').value,
+      tempat: document.getElementById('fTempat').value,
+      nama_kabid: document.getElementById('fNamaKabid').value,
+      nip_kabid: document.getElementById('fNipKabid').value,
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('lkb_profiles').upsert(payload, {onConflict:'user_id'});
+    if(error){ setSaveStatus('Gagal menyimpan profil.'); console.error(error); return; }
+    setSaveStatus('Profil tersimpan • '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
+  }
+
+  function scheduleSaveProfile(){
+    if(!appReady) return;
+    setSaveStatus('Menyimpan…');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveProfile, 500);
+  }
+
+  async function loadRhkList(){
+    const { data, error } = await sb.from('lkb_rhk').select('*').eq('user_id', currentUser.id).order('created_at');
+    if(error){ console.error(error); return []; }
+    return data.map(r=>({
+      id: r.id,
+      nama: r.nama,
+      jenis: r.jenis || 'Utama',
+      catatan: r.catatan || '',
+      kuantitas: {satuan: r.kuantitas_satuan||'', target: r.kuantitas_target||''},
+      kualitas: {satuan: r.kualitas_satuan||'', target: r.kualitas_target||''},
+      waktu: {satuan: r.waktu_satuan||'Bulan', target: r.waktu_target||'12'},
+      manualRealisasi: r.manual_realisasi || {kualitas:{TW1:'',TW2:'',TW3:'',TW4:''}, waktu:{TW1:'',TW2:'',TW3:'',TW4:''}}
+    }));
+  }
+
+  async function upsertRhk(r){
+    const payload = {
+      id: r.id, user_id: currentUser.id, nama: r.nama, jenis: r.jenis, catatan: r.catatan,
+      kuantitas_satuan: r.kuantitas.satuan, kuantitas_target: r.kuantitas.target,
+      kualitas_satuan: r.kualitas.satuan, kualitas_target: r.kualitas.target,
+      waktu_satuan: r.waktu.satuan, waktu_target: r.waktu.target,
+      manual_realisasi: r.manualRealisasi, updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('lkb_rhk').upsert(payload, {onConflict:'id'});
+    if(error){ console.error(error); setSaveStatus('Gagal menyimpan RHK.'); }
+  }
+  async function deleteRhkRow(id){
+    const { error } = await sb.from('lkb_rhk').delete().eq('id', id);
+    if(error) console.error(error);
+  }
+
+  async function loadMonthData(bulan, tahun){
+    const { data: cats, error: e1 } = await sb.from('lkb_kategori_tugas')
+      .select('*').eq('user_id', currentUser.id).eq('bulan', bulan).eq('tahun', Number(tahun)).order('urutan');
+    if(e1){ console.error(e1); return {categories:[], logs:[]}; }
+    const catIds = (cats||[]).map(c=>c.id);
+    let logs = [];
+    if(catIds.length){
+      const { data: logData, error: e2 } = await sb.from('lkb_daily_log')
+        .select('*').in('kategori_tugas_id', catIds).order('tanggal_mulai');
+      if(e2) console.error(e2); else logs = logData;
+    }
+    return {categories: cats||[], logs};
+  }
+
+  async function insertKategori(secId, uraian, target, satuan, rhkId, hitungKuantitas){
+    const bulan = document.getElementById('fBulan').value;
+    const tahun = Number(document.getElementById('fTahun').value)||new Date().getFullYear();
+    const id = rid();
+    const payload = {
+      id, user_id: currentUser.id, bulan, tahun, section_id: secId,
+      uraian: uraian||'', target: Number(target)||0, satuan: satuan||'', link_eviden:'',
+      rhk_id: rhkId||null, hitung_kuantitas: hitungKuantitas!==false, urutan: Date.now()
+    };
+    const { error } = await sb.from('lkb_kategori_tugas').insert(payload);
+    if(error){ console.error(error); alert('Gagal menambah kategori tugas: '+error.message); return null; }
+    return id;
+  }
+
+  function scheduleUpdateKategori(id, field, value){
+    if(!appReady) return;
+    setSaveStatus('Menyimpan…');
+    clearTimeout(window['_kt_'+id+'_'+field]);
+    window['_kt_'+id+'_'+field] = setTimeout(async ()=>{
+      const col = {uraian:'uraian', target:'target', satuan:'satuan', link:'link_eviden'}[field];
+      const payload = {}; payload[col] = field==='target' ? Number(value)||0 : value;
+      payload.updated_at = new Date().toISOString();
+      const { error } = await sb.from('lkb_kategori_tugas').update(payload).eq('id', id);
+      if(error){ console.error(error); setSaveStatus('Gagal menyimpan.'); }
+      else setSaveStatus('Tersimpan • '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
+    }, 500);
+  }
+
+  async function updateKategoriRhk(id, rhkId, hitungKuantitas){
+    const { error } = await sb.from('lkb_kategori_tugas').update({
+      rhk_id: rhkId || null, hitung_kuantitas: hitungKuantitas, updated_at: new Date().toISOString()
+    }).eq('id', id);
+    if(error) console.error(error);
+  }
+
+  async function deleteKategoriRow(id){
+    // Hapus foto eviden milik entri harian di kategori ini dulu (kalau ada)
+    const toRemove = dailyLog.filter(en=>en.rowId===id);
+    for(const en of toRemove){
+      if(en.hasPhoto) await deletePhotoFile(en.id);
+    }
+    const { error } = await sb.from('lkb_kategori_tugas').delete().eq('id', id);
+    if(error) console.error(error);
+  }
+
+  async function insertDailyLog(entry){
+    const payload = {
+      id: entry.id, user_id: currentUser.id, kategori_tugas_id: entry.rowId,
+      tanggal_mulai: entry.tanggalMulai, tanggal_selesai: entry.tanggalSelesai,
+      jumlah: Number(entry.jumlah)||0, rincian: entry.rincian||'', catatan: entry.catatan||'',
+      has_photo: !!entry.hasPhoto, foto_keterangan: entry.fotoKeterangan||'', foto_path: entry.fotoPath||null
+    };
+    const { error } = await sb.from('lkb_daily_log').insert(payload);
+    if(error){ console.error(error); alert('Gagal menyimpan catatan: '+error.message); return false; }
+    return true;
+  }
+  async function updateDailyLogRow(entry){
+    const payload = {
+      kategori_tugas_id: entry.rowId, tanggal_mulai: entry.tanggalMulai, tanggal_selesai: entry.tanggalSelesai,
+      jumlah: Number(entry.jumlah)||0, rincian: entry.rincian||'', catatan: entry.catatan||'',
+      has_photo: !!entry.hasPhoto, foto_keterangan: entry.fotoKeterangan||'', foto_path: entry.fotoPath||null
+    };
+    const { error } = await sb.from('lkb_daily_log').update(payload).eq('id', entry.id);
+    if(error){ console.error(error); alert('Gagal memperbarui catatan: '+error.message); return false; }
+    return true;
+  }
+  async function deleteDailyLogRow(id){
+    const { error } = await sb.from('lkb_daily_log').delete().eq('id', id);
+    if(error) console.error(error);
+  }
+
+  // ---------- Foto eviden (Supabase Storage, bucket privat 'lkb-eviden') ----------
+  function compressImage(file, maxDim, quality){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onload = ()=>{
+          let w=img.width, h=img.height;
+          if(w>maxDim || h>maxDim){
+            if(w>h){ h=Math.round(h*maxDim/w); w=maxDim; } else { w=Math.round(w*maxDim/h); h=maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width=w; canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          canvas.toBlob(blob=> resolve(blob), 'image/jpeg', quality);
+        };
+        img.onerror = ()=>reject(new Error('Gagal membaca gambar'));
+        img.src = reader.result;
+      };
+      reader.onerror = ()=>reject(new Error('Gagal membaca berkas'));
+      reader.readAsDataURL(file);
+    });
+  }
+  async function compressImageAuto(file){
+    const attempts = [{maxDim:1100,quality:0.75},{maxDim:850,quality:0.65},{maxDim:650,quality:0.55},{maxDim:480,quality:0.45}];
+    let last=null;
+    for(const a of attempts){
+      last = await compressImage(file, a.maxDim, a.quality);
+      if(last.size <= 700000) return last;
+    }
+    return last;
+  }
+  function photoPathFor(entryId){ return `${currentUser.id}/${entryId}.jpg`; }
+  async function uploadPhoto(entryId, blob){
+    const path = photoPathFor(entryId);
+    const { error } = await sb.storage.from('lkb-eviden').upload(path, blob, {upsert:true, contentType:'image/jpeg'});
+    if(error){ throw error; }
+    return path;
+  }
+  async function deletePhotoFile(entryId){
+    try{ await sb.storage.from('lkb-eviden').remove([photoPathFor(entryId)]); }catch(e){}
+    delete photoMemCache[entryId];
+  }
+  async function getPhotoDataUri(entryId, path){
+    if(photoMemCache[entryId]) return photoMemCache[entryId];
+    try{
+      const { data, error } = await sb.storage.from('lkb-eviden').download(path || photoPathFor(entryId));
+      if(error || !data) return null;
+      const dataUri = await new Promise((resolve)=>{
+        const reader = new FileReader();
+        reader.onload = ()=> resolve(reader.result);
+        reader.onerror = ()=> resolve(null);
+        reader.readAsDataURL(data);
+      });
+      if(dataUri) photoMemCache[entryId] = dataUri;
+      return dataUri;
+    }catch(e){ return null; }
+  }
+
+  // ================= TABEL KATEGORI TUGAS (Panel C) =================
+  const host = document.getElementById('sectionsHost');
+
+  function buildSectionShell(){
+    host.innerHTML = '';
+    SECTIONS.forEach(sec=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div style="padding:14px 18px;background:var(--green-pale);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;background:var(--green-deep);color:#fff;border-radius:5px;padding:2px 7px;font-weight:700;">${sec.roman}</span>
+          <span style="font-family:var(--serif);font-weight:700;color:var(--green-deep);">${esc(sec.title)}</span>
+        </div>
+        <div style="padding:16px 18px 18px;">
+          <table>
+            <thead><tr>
+              <th class="col-uraian">Kategori Tugas</th><th>Target</th><th>Real.</th><th>Satuan</th>
+              <th class="col-link">Link Eviden</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody data-body="${sec.id}"></tbody>
+          </table>
+          <button class="add-row no-print" data-add="${sec.id}" type="button">+ Tambah Kategori Tugas</button>
+        </div>`;
+      host.appendChild(card);
+    });
+  }
+
+  function statusFor(target, real){
+    target = Number(target)||0; real = Number(real)||0;
+    if(target<=0) return {label:'—', cls:''};
+    if(real>=target) return {label:'Terlaksana', cls:'st-ok'};
+    if(real>0) return {label:'Sebagian', cls:'st-warn'};
+    return {label:'Belum', cls:'st-danger'};
+  }
+
+  function renderKategoriRow(secId, row){
+    // row: {id, uraian, target, satuan, link_eviden, rhk_id, hitung_kuantitas}
+    const tbody = document.querySelector(`tbody[data-body="${secId}"]`);
+    const tr = document.createElement('tr');
+    tr.dataset.rid = row.id;
+    tr.dataset.rhkId = row.rhk_id || '';
+    tr.dataset.hitungKuantitas = row.hitung_kuantitas===false ? '0' : '1';
+    tr.innerHTML = `
+      <td class="col-uraian">
+        <textarea class="cell-input" rows="2" data-f="uraian" placeholder="Nama kategori tugas…">${esc(row.uraian)}</textarea>
+        <div class="rincian-toggle" data-rid-toggle="${row.id}"><span class="arrow">▸</span> <span class="rincian-count">0</span> rincian kegiatan</div>
+        <ul class="rincian-list" style="display:none;"></ul>
+        <select class="cell-input rhk-select" data-rhk-select style="margin-top:6px;font-size:11px;padding:4px 6px;">
+          <option value="">— Belum dikaitkan ke RHK —</option>
+        </select>
+        <label class="rhk-count-toggle" data-rhk-count-wrap style="display:none;font-size:10.5px;color:var(--ink-soft);margin-top:4px;align-items:center;gap:5px;">
+          <input type="checkbox" data-rhk-count-check style="width:auto;">
+          Hitung ke Kuantitas RHK
+        </label>
+      </td>
+      <td><input class="cell-input num" data-f="target" value="${esc(row.target)}"></td>
+      <td><input class="cell-input num" data-f="real" value="0" readonly title="Otomatis dari Catatan Kerja Harian"><span class="real-note">otomatis</span></td>
+      <td><input class="cell-input" data-f="satuan" value="${esc(row.satuan)}"></td>
+      <td class="col-link"><input class="cell-input" data-f="link" placeholder="Tempel link Drive…" value="${esc(row.link_eviden||'')}"></td>
+      <td><span class="status-pill"></span></td>
+      <td><button class="row-del no-print" title="Hapus baris" type="button">✕</button></td>`;
+    tbody.appendChild(tr);
+    refreshRow(tr);
+    updateRincianDisplay(tr);
+    populateRhkSelectForRow(tr);
+    const countWrap = tr.querySelector('[data-rhk-count-wrap]');
+    const countCheck = tr.querySelector('[data-rhk-count-check]');
+    countCheck.checked = row.hitung_kuantitas!==false;
+    countWrap.style.display = row.rhk_id ? 'flex' : 'none';
+    countCheck.addEventListener('change', async (e)=>{
+      tr.dataset.hitungKuantitas = e.target.checked ? '1' : '0';
+      await updateKategoriRhk(row.id, tr.dataset.rhkId, e.target.checked);
+      renderRhkList();
+    });
+    tr.querySelector('[data-rhk-select]').addEventListener('change', async (e)=>{
+      tr.dataset.rhkId = e.target.value;
+      countWrap.style.display = e.target.value ? 'flex' : 'none';
+      await updateKategoriRhk(row.id, e.target.value, countCheck.checked);
+      renderRhkList();
+    });
+    tr.addEventListener('input', (e)=>{
+      const f = e.target.dataset.f;
+      if(f && f!=='real'){
+        refreshRow(tr); refreshAll();
+        scheduleUpdateKategori(row.id, f, e.target.value);
+        if(f==='uraian'){ populateUraianSelect(); renderLogList(); }
+      }
+    });
+    tr.querySelector('.row-del').addEventListener('click', async ()=>{
+      if(!confirm('Hapus kategori tugas ini beserta seluruh catatan hariannya?')) return;
+      const removedId = tr.dataset.rid;
+      tr.remove();
+      const toRemove = dailyLog.filter(en=>en.rowId===removedId);
+      dailyLog = dailyLog.filter(en=>en.rowId!==removedId);
+      await deleteKategoriRow(removedId);
+      recomputeRealisasi();
+      populateUraianSelect();
+      renderLogList();
+      renderRhkList();
+    });
+  }
+
+  document.addEventListener('click', async (e)=>{
+    const addBtn = e.target.closest('[data-add]');
+    if(addBtn){
+      const secId = addBtn.dataset.add;
+      const newId = await insertKategori(secId, '', 1, 'Dokumen', '', true);
+      if(newId) renderKategoriRow(secId, {id:newId, uraian:'', target:1, satuan:'Dokumen', link_eviden:'', rhk_id:null, hitung_kuantitas:true});
+      refreshAll(); populateUraianSelect();
+      return;
+    }
+    const toggle = e.target.closest('[data-rid-toggle]');
+    if(toggle){
+      const list = toggle.nextElementSibling;
+      const isOpen = list.style.display !== 'none';
+      list.style.display = isOpen ? 'none' : 'block';
+      toggle.classList.toggle('open', !isOpen);
+      toggle.querySelector('.arrow').textContent = isOpen ? '▸' : '▾';
+    }
+  });
+
+  function refreshRow(tr){
+    const t = tr.querySelector('[data-f="target"]').value;
+    const r = tr.querySelector('[data-f="real"]').value;
+    const s = statusFor(t, r);
+    const pill = tr.querySelector('.status-pill');
+    pill.textContent = s.label;
+    pill.className = 'status-pill '+s.cls;
+  }
+
+  function refreshAll(){
+    let terlaksana=0, sebagian=0, belum=0, total=0, sumTarget=0, sumReal=0;
+    document.querySelectorAll('#sectionsHost tbody tr').forEach(tr=>{
+      const t = Number(tr.querySelector('[data-f="target"]').value)||0;
+      const r = Number(tr.querySelector('[data-f="real"]').value)||0;
+      total++; sumTarget+=t; sumReal+=Math.min(r,t);
+      const s = statusFor(t,r);
+      if(s.label==='Terlaksana') terlaksana++; else if(s.label==='Sebagian') sebagian++; else if(s.label==='Belum') belum++;
+    });
+    document.getElementById('statTerlaksana').textContent = terlaksana;
+    document.getElementById('statSebagian').textContent = sebagian;
+    document.getElementById('statBelum').textContent = belum;
+    document.getElementById('statTotal').textContent = total;
+    const pct = sumTarget>0 ? Math.round(sumReal/sumTarget*100) : 0;
+    document.getElementById('sealPct').textContent = pct+'%';
+    const c = 263.9;
+    document.getElementById('sealRing').setAttribute('stroke-dashoffset', String(c - c*Math.min(pct,100)/100));
+  }
+
+  function recomputeRealisasi(){
+    document.querySelectorAll('#sectionsHost tbody tr').forEach(tr=>{ tr.querySelector('[data-f="real"]').value = 0; });
+    dailyLog.forEach(entry=>{
+      const tr = document.querySelector(`tr[data-rid="${entry.rowId}"]`);
+      if(tr){
+        const inp = tr.querySelector('[data-f="real"]');
+        inp.value = (Number(inp.value)||0) + (Number(entry.jumlah)||0);
+      }
+    });
+    document.querySelectorAll('#sectionsHost tbody tr').forEach(tr=>{ refreshRow(tr); updateRincianDisplay(tr); });
+    refreshAll();
+  }
+
+  function updateRincianDisplay(tr){
+    const rowId = tr.dataset.rid;
+    const toggle = tr.querySelector('.rincian-toggle');
+    const list = tr.querySelector('.rincian-list');
+    if(!toggle||!list) return;
+    const entries = dailyLog.filter(en=>en.rowId===rowId).sort((a,b)=>(a.tanggalMulai||'').localeCompare(b.tanggalMulai||''));
+    toggle.querySelector('.rincian-count').textContent = entries.length;
+    if(entries.length===0){
+      list.innerHTML = '<li class="rincian-empty">Belum ada rincian kegiatan tercatat.</li>';
+    } else {
+      list.innerHTML = entries.map(en=>{
+        const label = en.rincian || en.catatan || '(tanpa rincian)';
+        return `<li>${esc(formatTanggal(en.tanggalMulai, en.tanggalSelesai))} — ${esc(label)} <b>(${esc(en.jumlah)})</b></li>`;
+      }).join('');
+    }
+  }
+
+  function populateRhkSelectForRow(tr){
+    const sel = tr.querySelector('[data-rhk-select]');
+    if(!sel) return;
+    const current = tr.dataset.rhkId || '';
+    sel.innerHTML = '<option value="">— Belum dikaitkan ke RHK —</option>' +
+      rhkList.map(r=>`<option value="${r.id}">${esc(r.nama)}</option>`).join('');
+    sel.value = current;
+  }
+  function refreshAllRhkSelects(){
+    document.querySelectorAll('#sectionsHost tbody tr').forEach(populateRhkSelectForRow);
+  }
+
+  // ================= TANGGAL & TRIWULAN =================
+  function formatTanggal(startIso, endIso){
+    if(!startIso) return '-';
+    const parseOne = (iso)=>{ const p=iso.split('-'); if(p.length!==3) return null; return {d:Number(p[2]), m:Number(p[1]), y:p[0]}; };
+    const s = parseOne(startIso);
+    if(!s) return startIso;
+    if(!endIso || endIso===startIso) return `${s.d} ${BULAN[s.m-1]||s.m} ${s.y}`;
+    const e = parseOne(endIso);
+    if(!e) return `${s.d} ${BULAN[s.m-1]||s.m} ${s.y}`;
+    if(s.y===e.y && s.m===e.m) return `${s.d}–${e.d} ${BULAN[s.m-1]||s.m} ${s.y}`;
+    if(s.y===e.y) return `${s.d} ${BULAN[s.m-1]||s.m} – ${e.d} ${BULAN[e.m-1]||e.m} ${s.y}`;
+    return `${s.d} ${BULAN[s.m-1]||s.m} ${s.y} – ${e.d} ${BULAN[e.m-1]||e.m} ${e.y}`;
+  }
+  function selectedMonthRange(){
+    const monthIndex = BULAN.indexOf(document.getElementById('fBulan').value);
+    const year = Number(document.getElementById('fTahun').value) || new Date().getFullYear();
+    if(monthIndex<0) return null;
+    const mm = String(monthIndex+1).padStart(2,'0');
+    const lastDay = new Date(year, monthIndex+1, 0).getDate();
+    return {first:`${year}-${mm}-01`, last:`${year}-${mm}-${String(lastDay).padStart(2,'0')}`, monthIndex, year};
+  }
+  function getFridaysInMonth(monthIndex, year){
+    const total = new Date(year, monthIndex+1, 0).getDate();
+    const out = [];
+    for(let d=1; d<=total; d++){
+      if(new Date(year, monthIndex, d).getDay()===5) out.push(`${year}-${String(monthIndex+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+    }
+    return out;
+  }
+  function updateLogDateConstraints(){
+    const range = selectedMonthRange();
+    if(!range) return;
+    const dT = document.getElementById('logTanggal'), dS = document.getElementById('logTanggalSelesai');
+    [dT, dS].forEach(inp=>{ inp.min=range.first; inp.max=range.last; });
+    const todayStr = new Date().toISOString().slice(0,10);
+    const def = (todayStr>=range.first && todayStr<=range.last) ? todayStr : range.first;
+    if(!dT.value || dT.value<range.first || dT.value>range.last) dT.value = def;
+    if(dS.value && (dS.value<range.first || dS.value>range.last)) dS.value = '';
+  }
+
+  function updateTodayReminder(){
+    const banner = document.getElementById('todayReminder');
+    const textEl = document.getElementById('todayReminderText');
+    const range = selectedMonthRange();
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0,10);
+    if(!range || todayStr<range.first || todayStr>range.last){ banner.classList.remove('show'); return; }
+    const hasToday = dailyLog.some(en=>{
+      const s=en.tanggalMulai, e=en.tanggalSelesai||en.tanggalMulai;
+      return todayStr>=s && todayStr<=e;
+    });
+    if(hasToday){ banner.classList.remove('show'); return; }
+    const isFriday = now.getDay()===5;
+    textEl.textContent = isFriday
+      ? 'Hari ini Jumat — jangan lupa catat kegiatan WFH Anda sebelum jam kerja berakhir.'
+      : 'Anda belum mencatat kegiatan kerja untuk hari ini.';
+    banner.classList.add('show');
+  }
+
+  // ================= FORM CATATAN KERJA HARIAN (Panel B) =================
+  const logKategori = document.getElementById('logKategori');
+  const logUraian = document.getElementById('logUraian');
+  const newUraianBox = document.getElementById('newUraianBox');
+  SECTIONS.forEach(sec=>{
+    const o=document.createElement('option'); o.value=sec.id; o.textContent=`${sec.roman}. ${sec.title}`;
+    logKategori.appendChild(o);
+  });
+
+  function populateUraianSelect(){
+    const secId = logKategori.value;
+    const prevVal = logUraian.value;
+    logUraian.innerHTML = '';
+    document.querySelectorAll(`tbody[data-body="${secId}"] tr`).forEach(tr=>{
+      const text = tr.querySelector('[data-f="uraian"]').value.trim() || '(uraian belum diisi)';
+      const o=document.createElement('option'); o.value=tr.dataset.rid; o.textContent=text;
+      logUraian.appendChild(o);
+    });
+    const optNew=document.createElement('option'); optNew.value='__new__'; optNew.textContent='+ Tambah kategori tugas baru…';
+    logUraian.appendChild(optNew);
+    if([...logUraian.options].some(o=>o.value===prevVal)) logUraian.value = prevVal;
+    toggleNewUraianBox();
+  }
+  function toggleNewUraianBox(){ newUraianBox.classList.toggle('show', logUraian.value==='__new__'); }
+  logKategori.addEventListener('change', populateUraianSelect);
+  logUraian.addEventListener('change', toggleNewUraianBox);
+
+  const logMultiHari = document.getElementById('logMultiHari');
+  const tanggalSelesaiWrap = document.getElementById('tanggalSelesaiWrap');
+  logMultiHari.addEventListener('change', ()=>{
+    tanggalSelesaiWrap.style.display = logMultiHari.checked ? 'block' : 'none';
+    if(logMultiHari.checked && !document.getElementById('logTanggalSelesai').value){
+      document.getElementById('logTanggalSelesai').value = document.getElementById('logTanggal').value;
+    }
+  });
+
+  document.getElementById('logFoto').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const captionWrap = document.getElementById('fotoCaptionWrap');
+    const captionInput = document.getElementById('logFotoCaption');
+    try{
+      setSaveStatus('Memproses foto…');
+      const blob = await compressImageAuto(file);
+      pendingPhotoBlob = blob;
+      pendingPhotoRemoved = false;
+      const previewUrl = URL.createObjectURL(blob);
+      document.getElementById('photoPreviewImg').src = previewUrl;
+      document.getElementById('photoPreviewBox').style.display = 'flex';
+      captionWrap.style.display = 'block';
+      if(!captionManuallyEdited || !captionInput.value.trim()){
+        captionInput.value = document.getElementById('logRincian').value.trim();
+      }
+      setSaveStatus('Foto siap dilampirkan.');
+    }catch(err){
+      setSaveStatus('Foto gagal diproses, coba pilih foto lain.');
+    }
+  });
+  document.getElementById('logFotoCaption').addEventListener('input', ()=>{ captionManuallyEdited = true; });
+  document.getElementById('logRincian').addEventListener('input', (e)=>{
+    if(pendingPhotoBlob && !captionManuallyEdited){
+      document.getElementById('logFotoCaption').value = e.target.value.trim();
+    }
+  });
+  document.getElementById('btnRemovePhoto').addEventListener('click', ()=>{
+    pendingPhotoBlob = null;
+    pendingPhotoRemoved = true;
+    captionManuallyEdited = false;
+    document.getElementById('logFoto').value = '';
+    document.getElementById('photoPreviewBox').style.display = 'none';
+    document.getElementById('fotoCaptionWrap').style.display = 'none';
+    document.getElementById('logFotoCaption').value = '';
+  });
+
+  function resetLogForm(){
+    editingLogId = null;
+    pendingPhotoBlob = null;
+    pendingPhotoRemoved = false;
+    captionManuallyEdited = false;
+    document.getElementById('logJumlah').value = 1;
+    document.getElementById('logRincian').value = '';
+    document.getElementById('logCatatan').value = '';
+    document.getElementById('logFoto').value = '';
+    document.getElementById('logFotoCaption').value = '';
+    document.getElementById('photoPreviewBox').style.display = 'none';
+    document.getElementById('fotoCaptionWrap').style.display = 'none';
+    document.getElementById('logEditingBanner').classList.remove('show');
+    document.getElementById('btnLogAdd').textContent = '＋ Catat Kerja Hari Ini';
+    logMultiHari.checked = false;
+    tanggalSelesaiWrap.style.display = 'none';
+    document.getElementById('logTanggalSelesai').value = '';
+    updateLogDateConstraints();
+  }
+  document.getElementById('btnCancelLogEdit').addEventListener('click', resetLogForm);
+
+  async function startEditLogEntry(entryId){
+    const entry = dailyLog.find(en=>en.id===entryId);
+    if(!entry) return;
+    editingLogId = entryId;
+    pendingPhotoBlob = null;
+    pendingPhotoRemoved = false;
+    captionManuallyEdited = false;
+
+    document.getElementById('logTanggal').value = entry.tanggalMulai;
+    const isMulti = !!(entry.tanggalSelesai && entry.tanggalSelesai!==entry.tanggalMulai);
+    logMultiHari.checked = isMulti;
+    tanggalSelesaiWrap.style.display = isMulti ? 'block' : 'none';
+    document.getElementById('logTanggalSelesai').value = entry.tanggalSelesai || entry.tanggalMulai;
+
+    logKategori.value = entry.sectionId;
+    populateUraianSelect();
+    logUraian.value = entry.rowId;
+
+    document.getElementById('logJumlah').value = entry.jumlah;
+    document.getElementById('logRincian').value = entry.rincian || '';
+    document.getElementById('logCatatan').value = entry.catatan || '';
+    document.getElementById('logFoto').value = '';
+
+    if(entry.hasPhoto){
+      document.getElementById('fotoCaptionWrap').style.display = 'block';
+      document.getElementById('logFotoCaption').value = entry.fotoKeterangan || '';
+      captionManuallyEdited = true;
+      const dataUri = await getPhotoDataUri(entry.id, entry.fotoPath);
+      if(dataUri){
+        document.getElementById('photoPreviewImg').src = dataUri;
+        document.getElementById('photoPreviewBox').style.display = 'flex';
+      }
+    } else {
+      document.getElementById('photoPreviewBox').style.display = 'none';
+      document.getElementById('fotoCaptionWrap').style.display = 'none';
+      document.getElementById('logFotoCaption').value = '';
+    }
+
+    document.getElementById('logEditingBannerDate').textContent = formatTanggal(entry.tanggalMulai, entry.tanggalSelesai);
+    document.getElementById('logEditingBanner').classList.add('show');
+    document.getElementById('btnLogAdd').textContent = '💾 Simpan Perubahan';
+    activatePanel('harian');
+    document.querySelector('.main-content').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  document.getElementById('btnLogAdd').addEventListener('click', async ()=>{
+    const tanggalMulai = document.getElementById('logTanggal').value;
+    const isMulti = logMultiHari.checked;
+    const tanggalSelesai = isMulti ? (document.getElementById('logTanggalSelesai').value || tanggalMulai) : tanggalMulai;
+    const sectionId = logKategori.value;
+    const jumlah = Number(document.getElementById('logJumlah').value)||0;
+    const rincian = document.getElementById('logRincian').value.trim();
+    const catatan = document.getElementById('logCatatan').value.trim();
+
+    if(!tanggalMulai){ alert('Isi tanggal mulai terlebih dahulu.'); return; }
+    if(isMulti && tanggalSelesai < tanggalMulai){ alert('Tanggal selesai tidak boleh sebelum tanggal mulai.'); return; }
+    if(!rincian){ alert('Isi Uraian Kegiatan terlebih dahulu.'); return; }
+    if(jumlah<=0){ alert('Jumlah realisasi harus lebih dari 0.'); return; }
+
+    let rowId = logUraian.value;
+    if(rowId==='__new__'){
+      const teks = document.getElementById('logUraianBaru').value.trim();
+      if(!teks){ alert('Isi nama kategori tugas baru terlebih dahulu.'); return; }
+      const target = document.getElementById('logTargetBaru').value || 1;
+      const satuan = document.getElementById('logSatuanBaru').value || 'Kegiatan';
+      const newId = await insertKategori(sectionId, teks, target, satuan, '', true);
+      if(!newId) return;
+      renderKategoriRow(sectionId, {id:newId, uraian:teks, target, satuan, link_eviden:'', rhk_id:null, hitung_kuantitas:true});
+      rowId = newId;
+      document.getElementById('logUraianBaru').value='';
+      document.getElementById('logTargetBaru').value='1';
+      document.getElementById('logSatuanBaru').value='Kegiatan';
+    }
+
+    const entryId = editingLogId || rid();
+    const fotoKeterangan = document.getElementById('logFotoCaption').value.trim();
+    const btn = document.getElementById('btnLogAdd');
+    btn.disabled = true;
+
+    const prevEntry = editingLogId ? dailyLog.find(en=>en.id===editingLogId) : null;
+    let hasPhoto = prevEntry ? !!prevEntry.hasPhoto : false;
+    let fotoPath = prevEntry ? prevEntry.fotoPath : null;
+    try{
+      if(pendingPhotoBlob){
+        fotoPath = await uploadPhoto(entryId, pendingPhotoBlob);
+        photoMemCache[entryId] = document.getElementById('photoPreviewImg').src;
+        hasPhoto = true;
+      } else if(pendingPhotoRemoved){
+        await deletePhotoFile(entryId);
+        hasPhoto = false; fotoPath = null;
+      }
+    }catch(err){
+      hasPhoto = false;
+      setSaveStatus('Foto gagal tersimpan, catatan tetap disimpan tanpa foto.');
+    }
+
+    const entryData = {
+      id: entryId, tanggalMulai, tanggalSelesai, sectionId, rowId, jumlah, rincian, catatan,
+      hasPhoto, fotoKeterangan: hasPhoto?fotoKeterangan:'', fotoPath
+    };
+
+    let ok;
+    if(editingLogId){
+      ok = await updateDailyLogRow(entryData);
+      if(ok){ const idx = dailyLog.findIndex(en=>en.id===editingLogId); if(idx>=0) dailyLog[idx]=entryData; }
+    } else {
+      ok = await insertDailyLog(entryData);
+      if(ok) dailyLog.push(entryData);
+    }
+
+    if(ok){
+      recomputeRealisasi();
+      populateUraianSelect();
+      logUraian.value = rowId;
+      renderLogList();
+      const wasEditing = !!editingLogId;
+      resetLogForm();
+      setSaveStatus((wasEditing?'Perubahan disimpan':'Catatan tersimpan') + ' • ' + new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
+    }
+    btn.disabled = false;
+  });
+
+  function renderLogList(){
+    const body = document.getElementById('logListBody');
+    body.innerHTML = '';
+    updateTodayReminder();
+    const range = selectedMonthRange();
+    const visible = range ? dailyLog.filter(en=>{
+      const s=en.tanggalMulai, e=en.tanggalSelesai||en.tanggalMulai;
+      return e>=range.first && s<=range.last;
+    }) : dailyLog;
+    if(visible.length===0){
+      body.innerHTML = `<tr><td colspan="7" class="log-empty">Belum ada catatan kerja harian bulan ini.</td></tr>`;
+      return;
+    }
+    const sorted = [...visible].sort((a,b)=>(b.tanggalMulai||'').localeCompare(a.tanggalMulai||''));
+    sorted.forEach(entry=>{
+      const tr = document.querySelector(`tr[data-rid="${entry.rowId}"]`);
+      const sec = SECTIONS.find(s=>s.id===entry.sectionId);
+      const kategori = tr ? tr.querySelector('[data-f="uraian"]').value : '[kategori dihapus]';
+      const rincianText = entry.rincian || entry.catatan || '-';
+      const catatanText = entry.rincian ? (entry.catatan||'-') : '-';
+      const rowEl = document.createElement('tr');
+      rowEl.innerHTML = `
+        <td>${esc(formatTanggal(entry.tanggalMulai, entry.tanggalSelesai))}</td>
+        <td><span class="badge-roman">${sec?sec.roman:'-'}</span></td>
+        <td>${esc(kategori)}</td>
+        <td>${esc(rincianText)}</td>
+        <td style="text-align:center;">${esc(entry.jumlah)}</td>
+        <td>${entry.hasPhoto? `<span class="photo-flag" data-view-photo="${entry.id}">📷 Lihat foto</span><br>`:''}${esc(catatanText)}</td>
+        <td style="white-space:nowrap;">
+          <button class="edit-btn" data-edit-log="${entry.id}" title="Edit" type="button">✎</button>
+          <button class="row-del no-print" data-del-log="${entry.id}" title="Hapus" type="button">✕</button>
+        </td>`;
+      body.appendChild(rowEl);
+    });
+    body.querySelectorAll('[data-edit-log]').forEach(btn=> btn.addEventListener('click', ()=> startEditLogEntry(btn.dataset.editLog)));
+    body.querySelectorAll('[data-view-photo]').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        const id = el.dataset.viewPhoto;
+        const entry = dailyLog.find(en=>en.id===id);
+        const src = await getPhotoDataUri(id, entry ? entry.fotoPath : null);
+        if(src) showLightbox(src, entry ? (entry.fotoKeterangan||entry.rincian||''):'');
+        else alert('Foto tidak ditemukan.');
+      });
+    });
+    body.querySelectorAll('[data-del-log]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm('Hapus catatan ini?')) return;
+        const id = btn.dataset.delLog;
+        const entry = dailyLog.find(en=>en.id===id);
+        dailyLog = dailyLog.filter(en=>en.id!==id);
+        if(entry && entry.hasPhoto) await deletePhotoFile(id);
+        await deleteDailyLogRow(id);
+        if(editingLogId===id) resetLogForm();
+        recomputeRealisasi();
+        renderLogList();
+      });
+    });
+  }
+
+  function showLightbox(src, caption){
+    let overlay = document.getElementById('lightboxOverlay');
+    if(!overlay){
+      overlay = document.createElement('div');
+      overlay.id='lightboxOverlay'; overlay.className='lightbox-overlay';
+      overlay.innerHTML = `<button class="lightbox-close" id="lightboxClose">✕</button><div style="text-align:center;"><img id="lightboxImg" src=""><div class="lightbox-cap" id="lightboxCap"></div></div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+      overlay.querySelector('#lightboxClose').addEventListener('click', ()=>overlay.remove());
+    }
+    overlay.querySelector('#lightboxImg').src = src;
+    overlay.querySelector('#lightboxCap').textContent = caption || '';
+  }
+
+  // ================= RHK & E-KINERJA (Panel F) =================
+  function renderRhkList(){
+    const body = document.getElementById('rhkListBody');
+    if(!body) return;
+    if(rhkList.length===0){
+      body.innerHTML = `<tr><td colspan="7" class="log-empty">Belum ada RHK ditambahkan.</td></tr>`;
+      return;
+    }
+    body.innerHTML = rhkList.map((r,i)=>{
+      const jumlahTerkait = Array.from(document.querySelectorAll('#sectionsHost tbody tr')).filter(tr=>tr.dataset.rhkId===r.id).length;
+      const jenisBadge = r.jenis==='Tambahan'
+        ? `<span class="status-pill st-warn">Tambahan</span>` : `<span class="status-pill st-ok">Utama</span>`;
+      const catatanHtml = r.catatan ? `<div style="font-size:10.5px;color:var(--ink-soft);margin-top:4px;font-style:italic;">📝 ${esc(r.catatan)}</div>` : '';
+      return `<tr>
+        <td style="text-align:center;">${i+1}</td>
+        <td style="text-align:center;">${jenisBadge}</td>
+        <td>${esc(r.nama)}${catatanHtml}</td>
+        <td style="text-align:center;">${esc(r.kuantitas.target||'-')} ${esc(r.kuantitas.satuan||'')}</td>
+        <td style="text-align:center;">${esc(r.kualitas.target||'-')} ${esc(r.kualitas.satuan||'')}</td>
+        <td style="text-align:center;">${esc(r.waktu.target||'-')} ${esc(r.waktu.satuan||'')}</td>
+        <td style="white-space:nowrap;">
+          <button class="edit-btn" data-edit-rhk="${r.id}" type="button">✎</button>
+          <button class="row-del no-print" data-del-rhk="${r.id}" type="button">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+    body.querySelectorAll('[data-edit-rhk]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const r = rhkList.find(x=>x.id===btn.dataset.editRhk);
+        if(!r) return;
+        editingRhkId = r.id;
+        document.getElementById('rhkNama').value = r.nama;
+        document.getElementById('rhkJenis').value = r.jenis||'Utama';
+        document.getElementById('rhkCatatan').value = r.catatan||'';
+        document.getElementById('rhkKuantitasSatuan').value = r.kuantitas.satuan||'';
+        document.getElementById('rhkKuantitasTarget').value = r.kuantitas.target||'';
+        document.getElementById('rhkKualitasSatuan').value = r.kualitas.satuan||'';
+        document.getElementById('rhkKualitasTarget').value = r.kualitas.target||'';
+        document.getElementById('rhkWaktuSatuan').value = r.waktu.satuan||'';
+        document.getElementById('rhkWaktuTarget').value = r.waktu.target||'';
+        document.getElementById('rhkEditingBanner').classList.add('show');
+        document.getElementById('btnRhkAdd').textContent = '💾 Simpan Perubahan RHK';
+      });
+    });
+    body.querySelectorAll('[data-del-rhk]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.dataset.delRhk;
+        const jumlahTerkait = Array.from(document.querySelectorAll('#sectionsHost tbody tr')).filter(tr=>tr.dataset.rhkId===id).length;
+        let pesan = 'Hapus RHK ini?';
+        if(jumlahTerkait>0) pesan += ` ${jumlahTerkait} kategori tugas masih terkait dan akan menjadi "belum dikaitkan".`;
+        if(!confirm(pesan)) return;
+        rhkList = rhkList.filter(x=>x.id!==id);
+        document.querySelectorAll(`#sectionsHost tbody tr[data-rhk-id="${id}"]`).forEach(tr=> tr.dataset.rhkId='');
+        await deleteRhkRow(id);
+        refreshAllRhkSelects();
+        renderRhkList();
+        if(editingRhkId===id) resetRhkForm();
+      });
+    });
+  }
+
+  function resetRhkForm(){
+    editingRhkId = null;
+    document.getElementById('rhkNama').value = '';
+    document.getElementById('rhkJenis').value = 'Utama';
+    document.getElementById('rhkCatatan').value = '';
+    document.getElementById('rhkKuantitasSatuan').value = '';
+    document.getElementById('rhkKuantitasTarget').value = '';
+    document.getElementById('rhkKualitasSatuan').value = '';
+    document.getElementById('rhkKualitasTarget').value = '';
+    document.getElementById('rhkWaktuSatuan').value = '';
+    document.getElementById('rhkWaktuTarget').value = '12';
+    document.getElementById('rhkEditingBanner').classList.remove('show');
+    document.getElementById('btnRhkAdd').textContent = '＋ Tambah RHK';
+  }
+  document.getElementById('btnCancelRhkEdit').addEventListener('click', resetRhkForm);
+
+  document.getElementById('btnRhkAdd').addEventListener('click', async ()=>{
+    const nama = document.getElementById('rhkNama').value.trim();
+    if(!nama){ alert('Isi nama RHK terlebih dahulu.'); return; }
+    const jenis = document.getElementById('rhkJenis').value;
+    const catatan = document.getElementById('rhkCatatan').value.trim();
+    const kuantitas = {satuan: document.getElementById('rhkKuantitasSatuan').value.trim(), target: document.getElementById('rhkKuantitasTarget').value.trim()};
+    const kualitas = {satuan: document.getElementById('rhkKualitasSatuan').value.trim(), target: document.getElementById('rhkKualitasTarget').value.trim()};
+    const waktu = {satuan: document.getElementById('rhkWaktuSatuan').value.trim()||'Bulan', target: document.getElementById('rhkWaktuTarget').value.trim()||'12'};
+    let r;
+    if(editingRhkId){
+      r = rhkList.find(x=>x.id===editingRhkId);
+      if(r){ r.nama=nama; r.jenis=jenis; r.catatan=catatan; r.kuantitas=kuantitas; r.kualitas=kualitas; r.waktu=waktu; }
+    } else {
+      r = {id: rid(), nama, jenis, catatan, kuantitas, kualitas, waktu, manualRealisasi:{kualitas:{TW1:'',TW2:'',TW3:'',TW4:''}, waktu:{TW1:'',TW2:'',TW3:'',TW4:''}}};
+      rhkList.push(r);
+    }
+    await upsertRhk(r);
+    resetRhkForm();
+    refreshAllRhkSelects();
+    renderRhkList();
+  });
+
+  async function computeRhkKuantitasPerTriwulan(year){
+    const result = {};
+    rhkList.forEach(r=> result[r.id] = {TW1:0,TW2:0,TW3:0,TW4:0});
+    const allMonths = Object.values(TRIWULAN_BULAN).flat();
+    const { data, error } = await sb.from('lkb_kategori_tugas')
+      .select('id, bulan, target, rhk_id, hitung_kuantitas, lkb_daily_log(jumlah)')
+      .eq('user_id', currentUser.id).eq('tahun', Number(year)).in('bulan', allMonths);
+    if(error){ console.error(error); return result; }
+    (data||[]).forEach(row=>{
+      if(!row.rhk_id || !result[row.rhk_id] || row.hitung_kuantitas===false) return;
+      let tw = null;
+      for(const k of Object.keys(TRIWULAN_BULAN)){ if(TRIWULAN_BULAN[k].includes(row.bulan)) { tw=k; break; } }
+      if(!tw) return;
+      const target = Number(row.target)||0;
+      const real = (row.lkb_daily_log||[]).reduce((s,l)=> s+(Number(l.jumlah)||0), 0);
+      result[row.rhk_id][tw] += Math.min(real, target || real);
+    });
+    return result;
+  }
+
+  async function renderRhkRekap(){
+    const year = document.getElementById('rhkRekapTahun').value || new Date().getFullYear();
+    const host = document.getElementById('rhkRekapHost');
+    if(rhkList.length===0){ host.innerHTML = `<p class="hint">Belum ada RHK untuk direkap.</p>`; return; }
+    const btn = document.getElementById('btnRhkRekapMuat');
+    const original = btn.textContent;
+    btn.textContent='Memuat…'; btn.disabled=true;
+    const kd = await computeRhkKuantitasPerTriwulan(year);
+    btn.textContent=original; btn.disabled=false;
+
+    let html = '';
+    rhkList.forEach((r, idx)=>{
+      const k = kd[r.id] || {TW1:0,TW2:0,TW3:0,TW4:0};
+      const totalK = k.TW1+k.TW2+k.TW3+k.TW4;
+      const targetK = Number(r.kuantitas.target)||0;
+      const pctK = targetK>0 ? Math.round(totalK/targetK*100) : 0;
+      html += `<div class="card" style="margin-bottom:14px;"><div style="padding:14px 16px;">
+        <p style="font-weight:700;margin:0 0 10px;font-size:13px;color:var(--green-deep);">RHK ${idx+1} <span class="status-pill ${r.jenis==='Tambahan'?'st-warn':'st-ok'}" style="font-size:9px;">${esc(r.jenis)}</span>: ${esc(r.nama)}</p>
+        <table style="font-size:12px;">
+          <thead><tr><th style="width:80px;">Aspek</th><th style="width:90px;">Target Th.</th><th>TW1</th><th>TW2</th><th>TW3</th><th>TW4</th><th style="width:70px;">Total</th><th style="width:60px;">%</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>Kuantitas</b></td><td style="text-align:center;">${esc(r.kuantitas.target||'-')} ${esc(r.kuantitas.satuan||'')}</td>
+              <td style="text-align:center;">${k.TW1}</td><td style="text-align:center;">${k.TW2}</td><td style="text-align:center;">${k.TW3}</td><td style="text-align:center;">${k.TW4}</td>
+              <td style="text-align:center;font-weight:700;">${totalK}</td><td style="text-align:center;font-weight:700;">${pctK}%</td>
+            </tr>
+            <tr>
+              <td><b>Kualitas</b></td><td style="text-align:center;">${esc(r.kualitas.target||'-')} ${esc(r.kualitas.satuan||'')}</td>
+              ${['TW1','TW2','TW3','TW4'].map(tw=>`<td><input class="cell-input rhk-manual" data-rhk-id="${r.id}" data-aspek="kualitas" data-tw="${tw}" value="${esc(r.manualRealisasi.kualitas[tw]||'')}" placeholder="isi manual" style="text-align:center;font-size:11.5px;"></td>`).join('')}
+              <td></td><td></td>
+            </tr>
+            <tr>
+              <td><b>Waktu</b></td><td style="text-align:center;">${esc(r.waktu.target||'-')} ${esc(r.waktu.satuan||'')}</td>
+              ${['TW1','TW2','TW3','TW4'].map((tw,twi)=>`<td><input class="cell-input rhk-manual" data-rhk-id="${r.id}" data-aspek="waktu" data-tw="${tw}" value="${esc(r.manualRealisasi.waktu[tw]||'')}" placeholder="cth: ${(twi+1)*3} Bulan" style="text-align:center;font-size:11.5px;"></td>`).join('')}
+              <td></td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div></div>`;
+    });
+    host.innerHTML = html;
+    host.querySelectorAll('.rhk-manual').forEach(inp=>{
+      inp.addEventListener('change', async (e)=>{
+        const r = rhkList.find(x=>x.id===e.target.dataset.rhkId);
+        if(!r) return;
+        r.manualRealisasi[e.target.dataset.aspek][e.target.dataset.tw] = e.target.value;
+        await upsertRhk(r);
+      });
+    });
+  }
+  document.getElementById('btnRhkRekapMuat').addEventListener('click', renderRhkRekap);
+
+  // ================= LAPORAN: LAMPIRAN FOTO =================
+  async function buildFotoAppendixHtml(entries){
+    const photoEntries = entries.filter(en=>en.hasPhoto);
+    if(!photoEntries.length) return '';
+    const items = [];
+    for(const en of photoEntries){
+      const src = await getPhotoDataUri(en.id, en.fotoPath);
+      if(src){
+        const cap = en.fotoKeterangan || en.rincian || '';
+        items.push({src, caption: `${formatTanggal(en.tanggalMulai,en.tanggalSelesai)} — ${cap}`});
+      }
+    }
+    if(!items.length) return '';
+    let rows = '';
+    for(let i=0;i<items.length;i+=2){
+      const a=items[i], b=items[i+1];
+      rows += `<tr>
+        <td style="width:50%;text-align:center;border:1px solid #999;padding:8px;vertical-align:top;">
+          <img src="${a.src}" style="max-width:100%;max-height:220px;"><div style="font-size:10px;margin-top:6px;">${esc(a.caption)}</div>
+        </td>
+        <td style="width:50%;text-align:center;border:1px solid #999;padding:8px;vertical-align:top;">
+          ${b?`<img src="${b.src}" style="max-width:100%;max-height:220px;"><div style="font-size:10px;margin-top:6px;">${esc(b.caption)}</div>`:''}
+        </td>
+      </tr>`;
+    }
+    return `<div style="page-break-before:always;"></div><p class="lamp-title" style="margin-top:0;">LAMPIRAN — FOTO KEGIATAN</p><table style="border-collapse:collapse;width:100%;">${rows}</table>`;
+  }
+
+  // ================= LAPORAN: BUKTI DUKUNG E-KINERJA =================
+  function groupRowsByRhk(){
+    const rows = Array.from(document.querySelectorAll('#sectionsHost tbody tr'));
+    const groups = {}; const unlinked = [];
+    rows.forEach(tr=>{
+      const rhkId = tr.dataset.rhkId || '';
+      const hitung = tr.dataset.hitungKuantitas!=='0';
+      const t = Number(tr.querySelector('[data-f="target"]').value)||0;
+      const r = Math.min(Number(tr.querySelector('[data-f="real"]').value)||0, t);
+      if(rhkId && rhkList.some(x=>x.id===rhkId)){
+        if(!groups[rhkId]) groups[rhkId] = {target:0, real:0, rows:[]};
+        if(hitung){ groups[rhkId].target+=t; groups[rhkId].real+=r; }
+        groups[rhkId].rows.push(tr);
+      } else unlinked.push(tr);
+    });
+    return {groups, unlinked};
+  }
+
+  async function buildEkinerjaReportHTML(){
+    const nama=document.getElementById('fNama').value||'[Nama]', nip=document.getElementById('fNip').value||'[NIP]';
+    const jabatan=document.getElementById('fJabatan').value, unit=document.getElementById('fUnit').value;
+    const bulan=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    const {groups, unlinked} = groupRowsByRhk();
+    let bodyHtml = '';
+    rhkList.forEach((rhk, idx)=>{
+      const g = groups[rhk.id];
+      const target=g?g.target:0, real=g?g.real:0;
+      const pct = target>0?Math.round(real/target*100):0;
+      let narrative = '';
+      if(g && g.rows.length){
+        const counted = g.rows.filter(tr=>tr.dataset.hitungKuantitas!=='0');
+        if(counted.length){
+          const labels=[...new Set(counted.map(tr=>tr.querySelector('[data-f="uraian"]').value.trim()))];
+          narrative = `${real} ${rhk.kuantitas.satuan||''} berdasarkan ${labels.join(', ')}`.trim();
+        }
+      }
+      bodyHtml += `<div style="margin-bottom:20px;${idx>0?'margin-top:20px;':''}">
+        <p style="font-weight:700;margin:0 0 3px;font-size:12px;">RHK ${idx+1} [${esc(rhk.jenis)}]: ${esc(rhk.nama)}</p>
+        <p style="margin:0 0 3px;font-size:10.5px;color:#555;">Kuantitas: ${esc(rhk.kuantitas.target||'-')} ${esc(rhk.kuantitas.satuan||'')} · Kualitas: ${esc(rhk.kualitas.target||'-')} ${esc(rhk.kualitas.satuan||'')} · Waktu: ${esc(rhk.waktu.target||'-')} ${esc(rhk.waktu.satuan||'')}</p>
+        <p style="margin:0 0 8px;font-size:10.5px;">Realisasi kategori terkait bulan ini: ${real}/${target} (${pct}%)</p>`;
+      if(narrative){
+        bodyHtml += `<div style="background:#E4EEE7;border-left:3px solid #146354;padding:7px 10px;margin:0 0 10px;font-size:10.5px;"><b>Teks Realisasi Kuantitas (siap salin ke e-Kinerja):</b><br>${esc(narrative)}</div>`;
+      }
+      if(!g || g.rows.length===0){
+        bodyHtml += `<p style="font-size:10.5px;color:#888;font-style:italic;">Belum ada kategori tugas dikaitkan ke RHK ini bulan ini.</p>`;
+      } else {
+        let evRows='';
+        g.rows.forEach(tr=>{
+          const kategoriRaw = tr.querySelector('[data-f="uraian"]').value.trim();
+          const dihitung = tr.dataset.hitungKuantitas!=='0';
+          const kategori = kategoriRaw + (dihitung?' <span style="color:#3E7A4B;font-weight:700;">[Kuantitas]</span>':' <span style="color:#B0812B;">[Pendukung]</span>');
+          const linkKategori = tr.querySelector('[data-f="link"]').value.trim();
+          const rowId = tr.dataset.rid;
+          const entriesForRow = dailyLog.filter(en=>en.rowId===rowId && en.catatan && en.catatan.trim());
+          let any=false;
+          if(linkKategori){ evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">Umum</td><td>${esc(linkKategori)}</td></tr>`; any=true; }
+          entriesForRow.forEach(en=>{ evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">${esc(formatTanggal(en.tanggalMulai,en.tanggalSelesai))}</td><td>${esc(en.catatan.trim())}</td></tr>`; any=true; });
+          if(!any) evRows+=`<tr><td>${kategori}</td><td style="text-align:center;">-</td><td style="color:#888;font-style:italic;">Belum ada link eviden</td></tr>`;
+        });
+        bodyHtml += `<table><thead><tr><th>Kategori Tugas</th><th style="width:90px;">Tanggal</th><th>Link Bukti Dukung</th></tr></thead><tbody>${evRows}</tbody></table>`;
+      }
+      bodyHtml += `</div>`;
+    });
+    if(rhkList.length===0) bodyHtml += `<p class="hint" style="font-style:italic;">Belum ada RHK. Isi di panel F.</p>`;
+    if(unlinked.length){
+      let unRows='';
+      unlinked.forEach(tr=>{
+        const kategori=tr.querySelector('[data-f="uraian"]').value.trim();
+        const t=Number(tr.querySelector('[data-f="target"]').value)||0, r=Number(tr.querySelector('[data-f="real"]').value)||0;
+        unRows+=`<tr><td>${esc(kategori)}</td><td style="text-align:center;">${r}/${t}</td></tr>`;
+      });
+      bodyHtml += `<div style="margin-top:22px;padding:10px 14px;background:#F6EDD8;border-radius:8px;"><p style="font-weight:700;margin:0 0 6px;font-size:11px;">⚠ Kategori Tugas Belum Dikaitkan ke RHK</p><table><thead><tr><th>Kategori Tugas</th><th style="width:90px;">Realisasi</th></tr></thead><tbody>${unRows}</tbody></table></div>`;
+    }
+    return `<p class="ph1">LAPORAN BUKTI DUKUNG E-KINERJA</p><p class="ph2">BULAN: ${esc(bulan.toUpperCase())} ${esc(tahun)}</p><div class="hr-accent"></div>
+      <table class="pid"><tr><td class="k">Nama</td><td>: ${esc(nama)}</td></tr><tr><td class="k">NIP</td><td>: ${esc(nip)}</td></tr><tr><td class="k">Jabatan</td><td>: ${esc(jabatan)}</td></tr><tr><td class="k">Unit Kerja</td><td>: ${esc(unit)}</td></tr></table>
+      ${bodyHtml}`;
+  }
+
+  function buildEkinerjaCopyText(){
+    const bulan=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    const {groups, unlinked} = groupRowsByRhk();
+    let out = `LAPORAN BUKTI DUKUNG E-KINERJA\nBULAN: ${bulan.toUpperCase()} ${tahun}\n\n`;
+    rhkList.forEach((rhk, idx)=>{
+      const g=groups[rhk.id]; const target=g?g.target:0, real=g?g.real:0;
+      const pct = target>0?Math.round(real/target*100):0;
+      out += `RHK ${idx+1}: ${rhk.nama}\nKuantitas: ${rhk.kuantitas.target||'-'} ${rhk.kuantitas.satuan||''} | Kualitas: ${rhk.kualitas.target||'-'} ${rhk.kualitas.satuan||''} | Waktu: ${rhk.waktu.target||'-'} ${rhk.waktu.satuan||''}\nRealisasi: ${real}/${target} (${pct}%)\n`;
+      if(g && g.rows.length){
+        const counted = g.rows.filter(tr=>tr.dataset.hitungKuantitas!=='0');
+        if(counted.length){
+          const labels=[...new Set(counted.map(tr=>tr.querySelector('[data-f="uraian"]').value.trim()))];
+          out += `>> Teks Realisasi Kuantitas: "${real} ${rhk.kuantitas.satuan||''} berdasarkan ${labels.join(', ')}"\n`;
+        }
+      }
+      if(!g || g.rows.length===0){ out += `  (belum ada kategori dikaitkan)\n`; }
+      else {
+        g.rows.forEach(tr=>{
+          const kategori=tr.querySelector('[data-f="uraian"]').value.trim();
+          const linkKategori=tr.querySelector('[data-f="link"]').value.trim();
+          const rowId=tr.dataset.rid;
+          const entriesForRow = dailyLog.filter(en=>en.rowId===rowId && en.catatan && en.catatan.trim());
+          if(linkKategori) out+=`  - [${kategori}] Umum: ${linkKategori}\n`;
+          entriesForRow.forEach(en=> out+=`  - [${kategori}] ${formatTanggal(en.tanggalMulai,en.tanggalSelesai)}: ${en.catatan.trim()}\n`);
+          if(!linkKategori && entriesForRow.length===0) out+=`  - [${kategori}] (belum ada link eviden)\n`;
+        });
+      }
+      out += `\n`;
+    });
+    if(unlinked.length){
+      out += `KATEGORI TUGAS BELUM DIKAITKAN KE RHK:\n`;
+      unlinked.forEach(tr=>{
+        const kategori=tr.querySelector('[data-f="uraian"]').value.trim();
+        const t=Number(tr.querySelector('[data-f="target"]').value)||0, r=Number(tr.querySelector('[data-f="real"]').value)||0;
+        out += `  - ${kategori}: ${r}/${t}\n`;
+      });
+    }
+    return out;
+  }
+  document.getElementById('btnEkinerjaCopy').addEventListener('click', ()=>{
+    const box=document.getElementById('ekinerjaCopyOutput');
+    box.value = buildEkinerjaCopyText();
+    box.focus(); box.select();
+    try{ document.execCommand('copy'); setSaveStatus('Teks disalin.'); }catch(e){}
+  });
+
+  // ================= LAPORAN: LKB BULANAN =================
+  async function buildReportHTML(){
+    const nama=document.getElementById('fNama').value||'[Nama Lengkap]', nip=document.getElementById('fNip').value||'[NIP]';
+    const jabatan=document.getElementById('fJabatan').value, unit=document.getElementById('fUnit').value;
+    const bulan=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    const tempat=document.getElementById('fTempat').value||'[Tempat]', tanggal=document.getElementById('fTanggal').value||'[Tanggal Penetapan]';
+    const namaKabid=document.getElementById('fNamaKabid').value||'[Nama Kepala Bidang]', nipKabid=document.getElementById('fNipKabid').value||'[NIP Kepala Bidang]';
+
+    let no=1, bodyRows='';
+    SECTIONS.forEach(sec=>{
+      const rowsWithRealisasi = Array.from(document.querySelectorAll(`tbody[data-body="${sec.id}"] tr`))
+        .filter(tr=> (Number(tr.querySelector('[data-f="real"]').value)||0) > 0);
+      if(rowsWithRealisasi.length===0) return;
+      bodyRows += `<tr class="grp-row"><td colspan="7">${sec.roman}. ${esc(sec.title.toUpperCase())}</td></tr>`;
+      rowsWithRealisasi.forEach(tr=>{
+        const uraian=tr.querySelector('[data-f="uraian"]').value.trim();
+        const target=tr.querySelector('[data-f="target"]').value, real=tr.querySelector('[data-f="real"]').value;
+        const satuan=tr.querySelector('[data-f="satuan"]').value, link=tr.querySelector('[data-f="link"]').value.trim();
+        const s=statusFor(target, real);
+        bodyRows += `<tr><td style="text-align:center;">${no}</td><td>${esc(uraian)}</td><td style="text-align:center;">${esc(target)}</td><td style="text-align:center;">${esc(real)}</td><td style="text-align:center;">${esc(satuan)}</td><td>${esc(link)||'[Link Drive Bukti]'}</td><td style="text-align:center;">${s.label}</td></tr>`;
+        no++;
+      });
+    });
+    if(!bodyRows) bodyRows = `<tr><td colspan="7" style="text-align:center;color:#888;font-style:italic;">Belum ada realisasi tercatat bulan ini.</td></tr>`;
+
+    let lampiranHtml = '';
+    const monthEntries = dailyLog.filter(en=>{
+      const range = selectedMonthRange();
+      if(!range) return true;
+      const s=en.tanggalMulai, e=en.tanggalSelesai||en.tanggalMulai;
+      return e>=range.first && s<=range.last;
+    });
+    if(monthEntries.length){
+      let logRows='';
+      [...monthEntries].sort((a,b)=>(a.tanggalMulai||'').localeCompare(b.tanggalMulai||'')).forEach(entry=>{
+        const tr=document.querySelector(`tr[data-rid="${entry.rowId}"]`);
+        const kategori=tr?tr.querySelector('[data-f="uraian"]').value.trim():'[kategori dihapus]';
+        const sec=SECTIONS.find(s=>s.id===entry.sectionId);
+        const rincianText=entry.rincian||entry.catatan||'-';
+        const catatanText=entry.rincian?(entry.catatan||'-'):'-';
+        logRows += `<tr><td>${esc(formatTanggal(entry.tanggalMulai,entry.tanggalSelesai))}</td><td style="text-align:center;">${sec?sec.roman:'-'}</td><td>${esc(kategori)}</td><td>${esc(rincianText)}</td><td style="text-align:center;">${esc(entry.jumlah)}</td><td>${esc(catatanText)}</td></tr>`;
+      });
+      lampiranHtml = `<p class="lamp-title">LAMPIRAN — RINCIAN CATATAN KERJA HARIAN</p><table><thead><tr><th style="width:90px;">Tanggal</th><th style="width:26px;">Kat.</th><th>Kategori Tugas</th><th>Uraian Kegiatan</th><th style="width:34px;">Jml</th><th>Eviden/Catatan</th></tr></thead><tbody>${logRows}</tbody></table>`;
+    }
+
+    const fotoHtml = await buildFotoAppendixHtml(monthEntries);
+
+    return `<p class="ph1">LAPORAN KINERJA BULANAN (LKB)</p><p class="ph2">BULAN: ${esc(bulan.toUpperCase())} ${esc(tahun)}</p><div class="hr-accent"></div>
+      <table class="pid"><tr><td class="k">Nama</td><td>: ${esc(nama)}</td></tr><tr><td class="k">NIP</td><td>: ${esc(nip)}</td></tr><tr><td class="k">Jabatan</td><td>: ${esc(jabatan)}</td></tr><tr><td class="k">Unit Kerja</td><td>: ${esc(unit)}</td></tr></table>
+      <table><thead><tr><th style="width:24px;">No</th><th>Kategori Tugas</th><th style="width:46px;">Target</th><th style="width:46px;">Real.</th><th style="width:60px;">Satuan</th><th style="width:130px;">Bukti Fisik / Eviden</th><th style="width:70px;">Keterangan</th></tr></thead><tbody>${bodyRows}</tbody></table>
+      ${lampiranHtml}
+      <table class="sig">
+        <tr><td colspan="2" class="place">${esc(tempat)}, ${esc(tanggal)}</td></tr>
+        <tr><td style="width:50%;">Mengetahui,<br>Kepala Bidang Pendidikan Madrasah</td><td style="width:50%;">Yang Membuat Laporan,<br>${esc(jabatan)}</td></tr>
+        <tr><td class="role">&nbsp;</td><td class="role">&nbsp;</td></tr>
+        <tr><td class="name"><span class="nm">${esc(namaKabid)}</span><br>NIP. ${esc(nipKabid)}</td><td class="name"><span class="nm">${esc(nama)}</span><br>NIP. ${esc(nip)}</td></tr>
+      </table>
+      ${fotoHtml}`;
+  }
+
+  document.getElementById('btnCopy').addEventListener('click', ()=>{
+    const nama=document.getElementById('fNama').value||'[Nama]', nip=document.getElementById('fNip').value||'[NIP]';
+    const jabatan=document.getElementById('fJabatan').value, unit=document.getElementById('fUnit').value;
+    const bulan=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    let out = `LAPORAN KINERJA BULANAN (LKB)\nBULAN: ${bulan.toUpperCase()} ${tahun}\n\nA. IDENTITAS PEGAWAI\nNama: ${nama}\nNIP: ${nip}\nJabatan: ${jabatan}\nUnit Kerja: ${unit}\n\nB. CAPAIAN KINERJA\n\n`;
+    let no=1;
+    SECTIONS.forEach(sec=>{
+      const rows = document.querySelectorAll(`tbody[data-body="${sec.id}"] tr`);
+      if(!rows.length) return;
+      out += `${sec.roman}. ${sec.title.toUpperCase()}\n`;
+      rows.forEach(tr=>{
+        const uraian=tr.querySelector('[data-f="uraian"]').value.trim();
+        const target=tr.querySelector('[data-f="target"]').value, real=tr.querySelector('[data-f="real"]').value;
+        const satuan=tr.querySelector('[data-f="satuan"]').value;
+        const s=statusFor(target,real);
+        out += `${no}. ${uraian}\n   Target: ${target} ${satuan} | Realisasi: ${real} ${satuan} | Status: ${s.label}\n\n`;
+        no++;
+      });
+    });
+    const box=document.getElementById('copyOutput');
+    box.value=out; box.focus(); box.select();
+    try{ document.execCommand('copy'); setSaveStatus('Teks disalin.'); }catch(e){}
+  });
+
+  // ================= LAPORAN: WFH RESMI =================
+  async function buildWfhReportHTML(){
+    const nama=document.getElementById('fNama').value||'[Nama Pegawai]', nip=document.getElementById('fNip').value||'[NIP]';
+    const pangkat=document.getElementById('fPangkat').value||'[Pangkat, Gol. Ruang]';
+    const jabatan=document.getElementById('fJabatan').value, unit=document.getElementById('fUnit').value;
+    const bulanName=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    const namaKabid=document.getElementById('fNamaKabid').value||'[Nama Pejabat Penilai Kinerja]', nipKabid=document.getElementById('fNipKabid').value||'[NIP Pejabat Penilai Kinerja]';
+
+    const monthIndex = BULAN.indexOf(bulanName);
+    const yearNum = Number(tahun)||new Date().getFullYear();
+    const fridays = getFridaysInMonth(monthIndex, yearNum);
+
+    const wfhEntries = [];
+    let bodyRows='', no=1;
+    fridays.forEach(f=>{
+      const tglLabel = formatTanggal(f);
+      const list = dailyLog.filter(en=>{ const s=en.tanggalMulai, e=en.tanggalSelesai||en.tanggalMulai; return f>=s && f<=e; });
+      let rencanaHtml, realisasiHtml;
+      if(list.length){
+        const rencanaLines=[], realisasiLines=[];
+        list.forEach(en=>{
+          wfhEntries.push(en);
+          const tr=document.querySelector(`tr[data-rid="${en.rowId}"]`);
+          const kategori = tr?tr.querySelector('[data-f="uraian"]').value.trim():'-';
+          const teks = en.rincian||en.catatan||'-';
+          rencanaLines.push(kategori||'-'); realisasiLines.push(teks||'-');
+        });
+        rencanaHtml = rencanaLines.map(t=>`• ${esc(t)}`).join('<br>');
+        realisasiHtml = realisasiLines.map(t=>`• ${esc(t)}`).join('<br>');
+      } else {
+        rencanaHtml = '<span style="color:#999;font-style:italic;">(belum dicatat)</span>';
+        realisasiHtml = '<span style="color:#999;font-style:italic;">(belum dicatat)</span>';
+      }
+      bodyRows += `<tr>
+        <td rowspan="2" style="text-align:center;vertical-align:top;">${no}.</td>
+        <td rowspan="2" style="vertical-align:top;">${esc(tglLabel)}</td>
+        <td style="text-align:center;">07.30</td><td style="text-align:center;">12.00</td>
+        <td rowspan="2" style="vertical-align:top;">${rencanaHtml}</td>
+        <td rowspan="2" style="vertical-align:top;">${realisasiHtml}</td>
+      </tr>
+      <tr><td style="text-align:center;">13.30</td><td style="text-align:center;">16.30</td></tr>`;
+      no++;
+    });
+
+    const fotoHtml = await buildFotoAppendixHtml(wfhEntries);
+
+    return `<p class="ph1">Rekapitulasi Pelaksanaan Work From Home</p><p class="ph2">${esc(bulanName)} ${esc(tahun)}</p><div class="hr-accent"></div>
+      <table class="pid"><tr><td class="k">Nama</td><td>: ${esc(nama)}</td></tr><tr><td class="k">NIP</td><td>: ${esc(nip)}</td></tr><tr><td class="k">Pangkat, Gol. Ruang</td><td>: ${esc(pangkat)}</td></tr><tr><td class="k">Jabatan</td><td>: ${esc(jabatan)}</td></tr><tr><td class="k">Unit Kerja</td><td>: ${esc(unit)}</td></tr></table>
+      <table><thead><tr><th style="width:24px;">No</th><th style="width:88px;">Tanggal</th><th style="width:50px;">Jam<br>Masuk</th><th style="width:50px;">Jam<br>Pulang</th><th>Rencana Hasil Kerja (SKP)</th><th>Realisasi</th></tr></thead><tbody>${bodyRows}</tbody></table>
+      <table style="width:100%;margin-top:34px;font-size:11px;border-collapse:collapse;">
+        <tr><td style="border:none;width:50%;"></td><td style="border:none;width:50%;text-align:center;">Mengetahui,</td></tr>
+        <tr><td style="border:none;text-align:center;">Pegawai Yang Dinilai</td><td style="border:none;text-align:center;">Pejabat Penilai Kinerja</td></tr>
+        <tr><td style="border:none;padding-bottom:70px;"></td><td style="border:none;padding-bottom:70px;"></td></tr>
+        <tr><td style="border:none;text-align:center;line-height:1.3;"><span class="nm" style="font-weight:700;text-decoration:underline;">${esc(nama)}</span><br>NIP. ${esc(nip)}</td><td style="border:none;text-align:center;line-height:1.3;"><span class="nm" style="font-weight:700;text-decoration:underline;">${esc(namaKabid)}</span><br>NIP. ${esc(nipKabid)}</td></tr>
+      </table>
+      ${fotoHtml}`;
+  }
+
+  // ================= UTILITAS CETAK & WORD =================
+  async function printBuiltReport(btn, builderFn){
+    const original = btn.textContent;
+    btn.textContent='Memuat…'; btn.disabled=true;
+    const html = await builderFn();
+    const printSheet = document.getElementById('printSheet');
+    printSheet.innerHTML = html;
+    const imgs = Array.from(printSheet.querySelectorAll('img'));
+    await Promise.all(imgs.map(img=>{
+      if(img.complete && img.naturalWidth>0) return Promise.resolve();
+      return new Promise(resolve=>{ img.onload=resolve; img.onerror=resolve; });
+    }));
+    await new Promise(resolve=> requestAnimationFrame(()=> requestAnimationFrame(resolve)));
+    btn.textContent=original; btn.disabled=false;
+    window.print();
+  }
+
+  function downloadAsWord(titleText, reportHtml, filename){
+    const doc = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(titleText)}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  @page{ size: 21cm 29.7cm; margin: 2cm 1.8cm; }
+  body{ font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 11pt; color:#232A21; }
+  p.ph1{ text-align:center; font-family:'Segoe UI', Calibri, Arial, sans-serif; font-size:19pt; font-weight:bold; margin:0 0 4pt; color:#0B4632; letter-spacing:0.3pt; }
+  p.ph2{ text-align:center; font-size:10.5pt; margin:0 0 4pt; color:#6B6252; text-transform:uppercase; letter-spacing:1.5pt; font-weight:bold; }
+  div.hr-accent{ width:55pt; height:2.2pt; background-color:#B0812B; margin:0 auto 14pt; }
+  p.lamp-title{ margin:20pt 0 8pt; font-weight:bold; font-size:11.5pt; color:#0B4632; text-transform:uppercase; letter-spacing:0.5pt; border-bottom:1.5pt solid #B0812B; padding-bottom:4pt; }
+  table{ border-collapse:collapse; width:100%; }
+  table.pid td{ border:none; padding:2pt 5pt; font-size:10.8pt; }
+  table.pid td.k{ width:120pt; color:#6B6252; font-weight:bold; text-transform:uppercase; font-size:9pt; vertical-align:top; }
+  table:not(.pid):not(.sig) th, table:not(.pid):not(.sig) td{ border:1pt solid #000000; padding:5pt 6pt; font-size:10pt; vertical-align:top; }
+  table:not(.pid):not(.sig) th{ background-color:#0B4632; color:#FFFFFF; font-size:9pt; text-transform:uppercase; font-weight:bold; letter-spacing:0.3pt; text-align:center; }
+  tr.grp-row td{ background-color:#B0812B; color:#FFFFFF; font-weight:bold; text-transform:uppercase; font-size:9.5pt; letter-spacing:0.3pt; }
+  table.sig{ margin-top:28pt; }
+  table.sig td{ border:none; text-align:center; font-size:10.8pt; vertical-align:top; padding:0 8pt; color:#232A21; line-height:1.3; }
+  table.sig td.place{ text-align:right; padding-bottom:14pt; }
+  table.sig td.role{ padding-top:0; padding-bottom:60pt; color:#6B6252; }
+  table.sig td.name{ font-weight:bold; }
+  table.sig td.name .nm{ text-decoration:underline; color:#0B4632; }
+</style></head><body>${reportHtml}</body></html>`;
+    const blob = new Blob(['\ufeff', doc], {type:'application/msword'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('btnPrint').addEventListener('click', ()=> printBuiltReport(document.getElementById('btnPrint'), buildReportHTML));
+  document.getElementById('btnWord').addEventListener('click', async ()=>{
+    const bulan=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    const nama=document.getElementById('fNama').value||'Pegawai';
+    const btn=document.getElementById('btnWord'); const original=btn.textContent;
+    btn.textContent='Memuat…'; btn.disabled=true;
+    const html = await buildReportHTML();
+    btn.textContent=original; btn.disabled=false;
+    downloadAsWord(`LKB ${bulan} ${tahun}`, html, `LKB_${sanitizeFilename(bulan)}${tahun}_${sanitizeFilename(nama)}.doc`);
+    setSaveStatus('File Word diunduh.');
+  });
+  document.getElementById('btnWfhPrint').addEventListener('click', ()=> printBuiltReport(document.getElementById('btnWfhPrint'), buildWfhReportHTML));
+  document.getElementById('btnWfhWord').addEventListener('click', async ()=>{
+    const bulan=document.getElementById('fBulan').value, tahun=document.getElementById('fTahun').value;
+    const nama=document.getElementById('fNama').value||'Pegawai';
+    const btn=document.getElementById('btnWfhWord'); const original=btn.textContent;
+    btn.textContent='Memuat…'; btn.disabled=true;
+    const html = await buildWfhReportHTML();
+    btn.textContent=original; btn.disabled=false;
+    downloadAsWord(`Laporan WFH ${bulan} ${tahun}`, html, `Laporan_WFH_${sanitizeFilename(bulan)}${tahun}_${sanitizeFilename(nama)}.doc`);
+    setSaveStatus('File Word WFH diunduh.');
+  });
+
+  // ================= REKAP TAHUNAN (Panel E) =================
+  async function loadYearlyData(year){
+    const { data, error } = await sb.from('lkb_kategori_tugas')
+      .select('bulan, target, lkb_daily_log(jumlah)')
+      .eq('user_id', currentUser.id).eq('tahun', Number(year));
+    if(error){ console.error(error); return BULAN.map(b=>({bulan:b, hasData:false, target:0, real:0, pct:0})); }
+    const perBulan = {};
+    BULAN.forEach(b=> perBulan[b] = {target:0, real:0, hasData:false});
+    (data||[]).forEach(row=>{
+      if(!perBulan[row.bulan]) return;
+      const t = Number(row.target)||0;
+      const r = (row.lkb_daily_log||[]).reduce((s,l)=>s+(Number(l.jumlah)||0),0);
+      perBulan[row.bulan].target += t;
+      perBulan[row.bulan].real += Math.min(r,t);
+      perBulan[row.bulan].hasData = true;
+    });
+    return BULAN.map(b=>{
+      const d = perBulan[b];
+      const pct = d.target>0 ? Math.round(d.real/d.target*100) : 0;
+      return {bulan:b, hasData:d.hasData, target:d.target, real:d.real, pct};
+    });
+  }
+
+  function buildYearChartSVG(data){
+    const w=760,h=210,padBottom=28,padTop=16,leftPad=8;
+    const barSlot=(w-leftPad*2)/data.length, barW=Math.max(10, barSlot*0.55);
+    let bars='';
+    data.forEach(d=>{
+      const cx=leftPad+data.indexOf(d)*barSlot+barSlot/2, x=cx-barW/2;
+      const barHeight=Math.max(2,(d.pct/100)*(h-padBottom-padTop)), y=h-padBottom-barHeight;
+      const color=!d.hasData?'#D9D2BE':d.pct>=80?'#3E7A4B':d.pct>=40?'#B0812B':'#A8402A';
+      bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barHeight.toFixed(1)}" fill="${color}" rx="3"></rect>`;
+      if(d.hasData) bars += `<text x="${cx.toFixed(1)}" y="${(y-5).toFixed(1)}" font-size="9.5" text-anchor="middle" fill="#20281F" font-weight="700">${d.pct}%</text>`;
+      bars += `<text x="${cx.toFixed(1)}" y="${h-10}" font-size="9" text-anchor="middle" fill="#5B6259">${d.bulan.slice(0,3)}</text>`;
+    });
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;max-width:760px;display:block;"><line x1="${leftPad}" y1="${h-padBottom}" x2="${w-leftPad}" y2="${h-padBottom}" stroke="#D9D2BE"></line>${bars}</svg>`;
+  }
+
+  async function renderYearlyRecap(){
+    const year = document.getElementById('rekapTahun').value || new Date().getFullYear();
+    const btn = document.getElementById('btnRekapMuat'); const original=btn.textContent;
+    btn.textContent='Memuat…'; btn.disabled=true;
+    const data = await loadYearlyData(year);
+    btn.textContent=original; btn.disabled=false;
+    const withData = data.filter(d=>d.hasData);
+    const totalTarget = withData.reduce((s,d)=>s+d.target,0);
+    const totalReal = withData.reduce((s,d)=>s+Math.min(d.real,d.target),0);
+    const avgPct = totalTarget>0?Math.round(totalReal/totalTarget*100):0;
+    document.getElementById('rekapSummary').innerHTML = `
+      <div class="stat"><div class="n">${withData.length}</div><div class="l">Bulan Terisi</div></div>
+      <div class="stat"><div class="n">${avgPct}%</div><div class="l">Rata-rata Capaian</div></div>
+      <div class="stat"><div class="n">${totalReal}</div><div class="l">Total Realisasi</div></div>`;
+    document.getElementById('rekapChartHost').innerHTML = buildYearChartSVG(data);
+    document.getElementById('rekapTableBody').innerHTML = data.map(d=>{
+      if(!d.hasData) return `<tr><td>${esc(d.bulan)}</td><td colspan="3" style="text-align:center;color:#888;font-style:italic;">Belum ada data</td></tr>`;
+      return `<tr><td>${esc(d.bulan)}</td><td style="text-align:center;">${d.target}</td><td style="text-align:center;">${d.real}</td><td style="text-align:center;">${d.pct}%</td></tr>`;
+    }).join('');
+  }
+  document.getElementById('btnRekapMuat').addEventListener('click', renderYearlyRecap);
+
+  async function buildYearlyReportHTML(){
+    const nama=document.getElementById('fNama').value||'[Nama]', nip=document.getElementById('fNip').value||'[NIP]';
+    const jabatan=document.getElementById('fJabatan').value, unit=document.getElementById('fUnit').value;
+    const tempat=document.getElementById('fTempat').value||'[Tempat]', tanggal=document.getElementById('fTanggal').value||'[Tanggal]';
+    const namaKabid=document.getElementById('fNamaKabid').value||'[Nama Kabid]', nipKabid=document.getElementById('fNipKabid').value||'[NIP Kabid]';
+    const year = document.getElementById('rekapTahun').value;
+    const data = await loadYearlyData(year);
+    const withData = data.filter(d=>d.hasData);
+    const totalTarget = withData.reduce((s,d)=>s+d.target,0);
+    const totalReal = withData.reduce((s,d)=>s+Math.min(d.real,d.target),0);
+    const avgPct = totalTarget>0?Math.round(totalReal/totalTarget*100):0;
+    const rows = data.map(d=> d.hasData
+      ? `<tr><td>${esc(d.bulan)}</td><td style="text-align:center;">${d.target}</td><td style="text-align:center;">${d.real}</td><td style="text-align:center;">${d.pct}%</td></tr>`
+      : `<tr><td>${esc(d.bulan)}</td><td colspan="3" style="text-align:center;color:#888;font-style:italic;">Belum ada data</td></tr>`
+    ).join('');
+    return `<p class="ph1">REKAP CAPAIAN KINERJA TAHUNAN</p><p class="ph2">TAHUN ${esc(year)}</p><div class="hr-accent"></div>
+      <table class="pid"><tr><td class="k">Nama</td><td>: ${esc(nama)}</td></tr><tr><td class="k">NIP</td><td>: ${esc(nip)}</td></tr><tr><td class="k">Jabatan</td><td>: ${esc(jabatan)}</td></tr><tr><td class="k">Unit Kerja</td><td>: ${esc(unit)}</td></tr></table>
+      <table><thead><tr><th>Bulan</th><th style="width:70px;">Target</th><th style="width:80px;">Realisasi</th><th style="width:80px;">% Capaian</th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr style="font-weight:bold;background:#F1E4C6;"><td>TOTAL / RATA-RATA</td><td style="text-align:center;">${totalTarget}</td><td style="text-align:center;">${totalReal}</td><td style="text-align:center;">${avgPct}%</td></tr></tfoot></table>
+      <table class="sig">
+        <tr><td colspan="2" class="place">${esc(tempat)}, ${esc(tanggal)}</td></tr>
+        <tr><td style="width:50%;">Mengetahui,<br>Kepala Bidang Pendidikan Madrasah</td><td style="width:50%;">Yang Membuat Laporan,<br>${esc(jabatan)}</td></tr>
+        <tr><td class="role">&nbsp;</td><td class="role">&nbsp;</td></tr>
+        <tr><td class="name"><span class="nm">${esc(namaKabid)}</span><br>NIP. ${esc(nipKabid)}</td><td class="name"><span class="nm">${esc(nama)}</span><br>NIP. ${esc(nip)}</td></tr>
+      </table>`;
+  }
+  document.getElementById('btnRekapPrint').addEventListener('click', ()=> printBuiltReport(document.getElementById('btnRekapPrint'), buildYearlyReportHTML));
+  document.getElementById('btnRekapWord').addEventListener('click', async ()=>{
+    const year=document.getElementById('rekapTahun').value, nama=document.getElementById('fNama').value||'Pegawai';
+    const btn=document.getElementById('btnRekapWord'); const original=btn.textContent;
+    btn.textContent='Memuat…'; btn.disabled=true;
+    const html = await buildYearlyReportHTML();
+    btn.textContent=original; btn.disabled=false;
+    downloadAsWord(`Rekap Tahunan ${year}`, html, `Rekap_Tahunan_${sanitizeFilename(nama)}_${year}.doc`);
+    setSaveStatus('File Word Rekap Tahunan diunduh.');
+  });
+
+  // ================= NAVIGASI MENU =================
+  const navItems = document.querySelectorAll('.nav-item');
+  const panels = document.querySelectorAll('.panel');
+  function activatePanel(name){
+    navItems.forEach(b=> b.classList.toggle('active', b.dataset.nav===name));
+    panels.forEach(p=>{
+      const isActive = p.dataset.panel===name;
+      p.style.display = isActive?'':'none';
+      p.classList.toggle('active', isActive);
+    });
+    if(name==='harian') updateTodayReminder();
+    if(name==='tahunan' && !panelTahunanLoaded){ panelTahunanLoaded=true; renderYearlyRecap(); }
+    if(name==='rhk' && !panelRhkLoaded){
+      panelRhkLoaded = true;
+      document.getElementById('rhkRekapTahun').value = document.getElementById('fTahun').value;
+      renderRhkRekap();
+    }
+  }
+  navItems.forEach(btn=> btn.addEventListener('click', ()=> activatePanel(btn.dataset.nav)));
+
+  function updateHeaderPeriode(){
+    document.getElementById('headerPeriode').textContent = document.getElementById('fBulan').value+' '+document.getElementById('fTahun').value;
+  }
+
+  // ================= MUAT BULAN (ganti bulan/tahun) =================
+  async function loadMonth(){
+    buildSectionShell();
+    dailyLog = [];
+    const bulan = document.getElementById('fBulan').value;
+    const tahun = document.getElementById('fTahun').value;
+    const { categories, logs } = await loadMonthData(bulan, tahun);
+    categories.forEach(cat=> renderKategoriRow(cat.section_id, cat));
+    dailyLog = logs.map(l=>({
+      id:l.id, tanggalMulai:l.tanggal_mulai, tanggalSelesai:l.tanggal_selesai, sectionId:'',
+      rowId:l.kategori_tugas_id, jumlah:l.jumlah, rincian:l.rincian, catatan:l.catatan,
+      hasPhoto:l.has_photo, fotoKeterangan:l.foto_keterangan, fotoPath:l.foto_path
+    }));
+    // lengkapi sectionId tiap entri dari kategori terkait
+    const catMap = {}; categories.forEach(c=> catMap[c.id]=c.section_id);
+    dailyLog.forEach(en=> en.sectionId = catMap[en.rowId] || '');
+
+    recomputeRealisasi();
+    populateUraianSelect();
+    renderLogList();
+    renderRhkList();
+    updateHeaderPeriode();
+    updateLogDateConstraints();
+    panelTahunanLoaded = false;
+    panelRhkLoaded = false;
+  }
+
+  document.getElementById('fBulan').addEventListener('change', async ()=>{ await loadMonth(); });
+  document.getElementById('fTahun').addEventListener('change', async ()=>{ await loadMonth(); });
+
+  ['fNama','fNip','fUnit','fJabatan','fPangkat','fTempat','fTanggal','fNamaKabid','fNipKabid'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', scheduleSaveProfile);
+  });
+
+  // ================= INISIALISASI APLIKASI =================
+  async function initApp(){
+    const bulanSel = document.getElementById('fBulan');
+    const bulanSekarang = BULAN[new Date().getMonth()];
+    BULAN.forEach(b=>{
+      const o=document.createElement('option'); o.value=b; o.textContent=b;
+      if(b===bulanSekarang) o.selected=true;
+      bulanSel.appendChild(o);
+    });
+    document.getElementById('fTahun').value = new Date().getFullYear();
+
+    const profile = await loadProfile();
+    if(profile){
+      document.getElementById('fNama').value = profile.nama||'';
+      document.getElementById('fNip').value = profile.nip||'';
+      if(profile.unit_kerja) document.getElementById('fUnit').value = profile.unit_kerja;
+      if(profile.jabatan) document.getElementById('fJabatan').value = profile.jabatan;
+      document.getElementById('fPangkat').value = profile.pangkat||'';
+      if(profile.tempat) document.getElementById('fTempat').value = profile.tempat;
+      document.getElementById('fNamaKabid').value = profile.nama_kabid||'';
+      document.getElementById('fNipKabid').value = profile.nip_kabid||'';
+    }
+
+    rhkList = await loadRhkList();
+    document.getElementById('rekapTahun').value = document.getElementById('fTahun').value;
+
+    await loadMonth();
+    appReady = true;
+    setSaveStatus('Siap. Data tersinkron dari cloud.');
+  }
+
+  // Cek sesi login yang sudah ada (supaya tidak perlu login ulang tiap buka)
+  // Kecuali kalau ini link reset kata sandi (biarkan event PASSWORD_RECOVERY
+  // di atas yang menangani, jangan langsung masuk ke aplikasi utama).
+  (async function checkExistingSession(){
+    if(window.location.hash.includes('type=recovery')) return;
+    const { data } = await sb.auth.getSession();
+    if(data && data.session){
+      await onLoggedIn(data.session.user);
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
+

@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buku LKB Cloud — Pendidikan Madrasah</title>
+
+<!-- ===== PWA: bisa "diinstall" ke HP/laptop ===== -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0B4632">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LKB Cloud">
 <style>
   :root{
     --paper:#F6F3EA;
@@ -506,6 +515,10 @@
       <button class="nav-item" data-nav="tahunan" type="button"><span class="nav-letter">E</span> Rekap Tahunan</button>
       <button class="nav-item" data-nav="rhk" type="button"><span class="nav-letter">F</span> RHK &amp; e-Kinerja</button>
     </nav>
+
+    <button class="btn btn-gold" id="btnInstallApp" type="button" style="display:none;width:100%;">📲 Install Aplikasi ke Perangkat</button>
+    <p class="hint" id="iosInstallHint" style="display:none;margin-top:-8px;">Di iPhone/iPad: ketuk ikon <b>Bagikan (Share)</b> di Safari, lalu pilih <b>"Add to Home Screen"</b>.</p>
+
     <div class="nav-footer">
       <span id="userEmail"></span>
       <span id="saveStatus">Siap.</span>
@@ -2204,8 +2217,48 @@
     }
   })();
 
+  // ================= PWA: Install ke Perangkat =================
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+    });
+  }
+
+  let deferredInstallPrompt = null;
+  const btnInstall = document.getElementById('btnInstallApp');
+  const iosHint = document.getElementById('iosInstallHint');
+
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    // Android / Chrome / Edge (desktop & mobile): browser punya prompt instalasi resmi
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    btnInstall.style.display = 'block';
+  });
+
+  btnInstall.addEventListener('click', async ()=>{
+    if(!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    btnInstall.style.display = 'none';
+  });
+
+  window.addEventListener('appinstalled', ()=>{
+    btnInstall.style.display = 'none';
+    setSaveStatus('Aplikasi berhasil diinstall ke perangkat ini.');
+  });
+
+  // iOS Safari tidak mendukung beforeinstallprompt — tampilkan petunjuk manual
+  (function checkIosInstall(){
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+    if(isIos && !isStandalone){
+      iosHint.style.display = 'block';
+    }
+  })();
+
 })();
 </script>
 </body>
 </html>
-

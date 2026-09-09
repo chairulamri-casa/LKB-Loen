@@ -395,10 +395,12 @@
     <!-- PANEL C: CAPAIAN KINERJA -->
     <section class="panel" id="panelCapaian" data-panel="capaian" style="display:none;">
       <p class="panel-title"><span class="roman">C</span> Capaian Kinerja Bulanan</p>
-      <div class="reminder-banner" id="copyCategoriesBanner">
-        <span>📋</span>
-        <span id="copyCategoriesBannerText" style="flex:1;"></span>
-        <button class="btn btn-gold" id="btnCopyCategories" type="button" style="padding:8px 16px;font-size:12.5px;">Salin Sekarang</button>
+      <div class="actions no-print" style="margin-bottom:16px;align-items:center;">
+        <select id="copySourceMonthSelect" style="max-width:220px;">
+          <option value="">— Pilih bulan sumber —</option>
+        </select>
+        <button class="btn btn-gold" id="btnCopyCategories" type="button">📋 Salin Kategori dari Bulan Itu</button>
+        <span class="hint" id="copyCategoriesStatus" style="margin:0;"></span>
       </div>
       <div id="sectionsHost"></div>
     </section>
@@ -2228,7 +2230,7 @@
     panelTahunanLoaded = false;
     panelRhkLoaded = false;
 
-    await updateCopyCategoriesBanner(categories.length===0, bulan, tahun);
+    await populateCopySourceMonthSelect();
   }
 
   // ================= SALIN KATEGORI TUGAS DARI BULAN LAIN =================
@@ -2251,44 +2253,70 @@
     return best;
   }
 
-  async function updateCopyCategoriesBanner(isEmpty, bulan, tahun){
-    const banner = document.getElementById('copyCategoriesBanner');
-    if(!isEmpty){ banner.classList.remove('show'); return; }
-    const src = await findLatestMonthWithCategories(bulan, tahun);
-    if(!src){ banner.classList.remove('show'); return; }
-    const { data } = await sb.from('lkb_kategori_tugas')
-      .select('id', {count:'exact', head:true}).eq('user_id', currentUser.id).eq('bulan', src.bulan).eq('tahun', src.tahun);
-    document.getElementById('copyCategoriesBannerText').textContent =
-      `Kategori tugas bulan ini masih kosong. Salin dari ${src.bulan} ${src.tahun} supaya tidak perlu buat ulang?`;
-    document.getElementById('btnCopyCategories').dataset.srcBulan = src.bulan;
-    document.getElementById('btnCopyCategories').dataset.srcTahun = src.tahun;
-    banner.classList.add('show');
+  async function populateCopySourceMonthSelect(){
+    const sel = document.getElementById('copySourceMonthSelect');
+    const bulan = document.getElementById('fBulan').value;
+    const tahun = document.getElementById('fTahun').value;
+    const { data } = await sb.from('lkb_kategori_tugas').select('bulan, tahun').eq('user_id', currentUser.id);
+    sel.innerHTML = '<option value="">— Pilih bulan sumber —</option>';
+    if(!data || !data.length) return;
+    const currentKey = monthKeyOf(bulan, tahun);
+    const seen = new Set();
+    const opts = [];
+    data.forEach(row=>{
+      const key = monthKeyOf(row.bulan, row.tahun);
+      const sig = `${row.bulan}|${row.tahun}`;
+      if(key===currentKey || seen.has(sig)) return;
+      seen.add(sig);
+      opts.push({label:`${row.bulan} ${row.tahun}`, bulan:row.bulan, tahun:row.tahun, key});
+    });
+    opts.sort((a,b)=> b.key-a.key); // terbaru dulu
+    opts.forEach(o=>{
+      const el = document.createElement('option');
+      el.value = `${o.bulan}|${o.tahun}`;
+      el.textContent = o.label;
+      sel.appendChild(el);
+    });
+    if(opts.length) sel.value = `${opts[0].bulan}|${opts[0].tahun}`; // otomatis pilih yang terbaru sebagai default
   }
 
   document.getElementById('btnCopyCategories').addEventListener('click', async ()=>{
+    const sel = document.getElementById('copySourceMonthSelect');
+    const statusEl = document.getElementById('copyCategoriesStatus');
+    if(!sel.value){ alert('Pilih dulu bulan sumbernya dari dropdown.'); return; }
+    const [srcBulan, srcTahun] = sel.value.split('|');
     const btn = document.getElementById('btnCopyCategories');
-    const srcBulan = btn.dataset.srcBulan, srcTahun = btn.dataset.srcTahun;
-    if(!srcBulan) return;
     const original = btn.textContent;
     btn.textContent = 'Menyalin…'; btn.disabled = true;
+    statusEl.textContent = '';
     try{
       const { categories: srcCats } = await loadMonthData(srcBulan, srcTahun);
       const bulan = document.getElementById('fBulan').value;
       const tahun = Number(document.getElementById('fTahun').value);
-      let i=0;
+
+      // hindari duplikat: lewati kategori yang namanya sudah ada di bulan ini
+      const existingNames = new Set(
+        Array.from(document.querySelectorAll('#sectionsHost tbody tr'))
+          .map(tr=> tr.querySelector('[data-f="uraian"]').value.trim().toLowerCase())
+      );
+
+      let disalin=0, dilewati=0, i=0;
       for(const c of srcCats){
+        const namaLower = (c.uraian||'').trim().toLowerCase();
+        if(namaLower && existingNames.has(namaLower)){ dilewati++; continue; }
         const payload = {
           id: rid(), user_id: currentUser.id, bulan, tahun, section_id: c.section_id,
           uraian: c.uraian, target: c.target, satuan: c.satuan, link_eviden:'',
           rhk_id: c.rhk_id, hitung_kuantitas: c.hitung_kuantitas!==false, urutan: Date.now()+i
         };
         const { error } = await sb.from('lkb_kategori_tugas').insert(payload);
-        if(error) console.error(error);
-        i++;
+        if(error){ console.error(error); continue; }
+        disalin++; i++;
       }
-      document.getElementById('copyCategoriesBanner').classList.remove('show');
       await loadMonth();
-      setSaveStatus(`${srcCats.length} kategori tugas berhasil disalin dari ${srcBulan} ${srcTahun}.`);
+      const pesan = `${disalin} kategori tugas disalin dari ${srcBulan} ${srcTahun}` + (dilewati>0?` (${dilewati} dilewati karena sudah ada)`:'') + '.';
+      setSaveStatus(pesan);
+      statusEl.textContent = pesan;
     }catch(err){
       alert('Gagal menyalin kategori. Coba lagi.');
     }
@@ -2523,3 +2551,4 @@
 </script>
 </body>
 </html>
+
